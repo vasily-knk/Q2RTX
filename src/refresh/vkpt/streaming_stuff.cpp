@@ -42,15 +42,44 @@ namespace geom
 #include "vr_streaming/user_data.h"
 #include "vr_streaming/cmds.h"
 
+#include "webstream/std_stream_policy.h"
+#include "webstream/stream_server.h"
+
+__pragma(comment(lib, "ws_server64.lib"))
 
 namespace
 {
 
 struct streaming_stuff
+    : webstream::stream_server_callback
 {
+    streaming_stuff()
+    {
+        webstream::ws_init_logging();
+
+        webstream::stream_quality_t quality;
+        quality.max_resolution = {1920, 1280};
+        quality.bitrate = 8 * 1024 * 1024;
+        quality.frame_rate = 20;
+
+        webstream::std_stream_policy::stream_policy_t policy;
+        for (auto &s : policy)
+            s = {quality};
+
+
+        stream_policy_ = std::make_unique<webstream::std_stream_policy>(policy);
+        stream_server_ = webstream::create_websocket_stream_server(webstream::stream_server_settings(), this);
+        stream_server_->set_stream_policy(stream_policy_.get());
+        encoder_  = webstream::create_nvenc_encoder();
+
+	    stream_server_->set_active_encoder(encoder_.get());        
+
+        stream_server_->start();
+    }
+    
+    
     void dump_bsp_mesh(float const *verts, int num_verts, char const * /*map_name*/)
     {
-        
         static_assert(sizeof(decltype(bsp_mesh_)::value_type) == sizeof(geom::point_3f), "Invalid vertex size");
         bsp_mesh_.resize(num_verts);
         memcpy(bsp_mesh_.data(), verts, sizeof(geom::point_3f) * num_verts);
@@ -60,9 +89,29 @@ struct streaming_stuff
     {
         
     }
-    
+
+public:
+    void on_client_connected() override
+    {
+        
+    }
+
+    void on_server_exiting(const char* reason) override
+    {
+        
+    }
+
+    void on_resolution_requested(webstream::video_resolution const& target_resolution) override
+    {
+        
+    }
+
 private:
     std::vector<geom::point_3f> bsp_mesh_;
+
+    webstream::stream_server_ptr stream_server_;
+    std::unique_ptr<webstream::stream_policy> stream_policy_;
+    webstream::encoder_ptr encoder_;
 };
 
 std::unique_ptr<streaming_stuff> g_streaming_stuff;
