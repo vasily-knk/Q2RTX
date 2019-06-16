@@ -2499,6 +2499,8 @@ R_Init_RTX(qboolean total)
 		qvk.sintab[i] = sinf(i * (2 * M_PI / 255));
 	}
 
+    streaming_stuff_init();
+
 	return qtrue;
 }
 
@@ -2506,6 +2508,8 @@ R_Init_RTX(qboolean total)
 void
 R_Shutdown_RTX(qboolean total)
 {
+    streaming_stuff_shutdown();
+
 	vkDeviceWaitIdle(qvk.device);
 	
 	Cmd_RemoveCommand("reload_shader");
