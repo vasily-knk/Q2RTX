@@ -26,6 +26,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "refresh/images.h"
 #include "refresh/models.h"
 
+
+
 // Console variables that we need to access from this module
 cvar_t      *vid_rtx;
 cvar_t      *vid_wombat;
@@ -347,6 +349,11 @@ void CL_InitRefresh(void)
 #else
 #error "REF_GL and REF_VKPT are both disabled, at least one has to be enableds"
 #endif
+
+    if (vid_rtx)
+    {
+        
+    }
 
     if (!R_Init(qtrue)) {
         Com_Error(ERR_FATAL, "Couldn't initialize refresh: %s", Com_GetLastError());
