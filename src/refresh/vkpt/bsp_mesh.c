@@ -1453,6 +1453,7 @@ collect_cluster_lights(bsp_mesh_t *wm, bsp_t *bsp)
 #undef MAX_LIGHTS_PER_CLUSTER
 }
 
+
 void
 bsp_mesh_create_from_bsp(bsp_mesh_t *wm, bsp_t *bsp, const char* map_name)
 {

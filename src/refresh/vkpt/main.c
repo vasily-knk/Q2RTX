@@ -47,6 +47,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <string.h>
 #include <assert.h>
 
+#include "streaming_stuff.h"
+
 cvar_t *cvar_profiler = NULL;
 cvar_t *cvar_vsync = NULL;
 cvar_t *cvar_pt_caustics = NULL;
@@ -2764,6 +2766,9 @@ R_BeginRegistration_RTX(const char *name)
 	bsp_world_model = bsp;
 	bsp_mesh_register_textures(bsp);
 	bsp_mesh_create_from_bsp(&vkpt_refdef.bsp_mesh_world, bsp, name);
+
+    streaming_stuff_dump_bsp_mesh(vkpt_refdef.bsp_mesh_world.positions, vkpt_refdef.bsp_mesh_world.num_vertices, name);
+
 	_VK(vkpt_vertex_buffer_upload_bsp_mesh_to_staging(&vkpt_refdef.bsp_mesh_world));
 	_VK(vkpt_vertex_buffer_upload_staging());
 	vkpt_refdef.bsp_mesh_world_loaded = 1;
