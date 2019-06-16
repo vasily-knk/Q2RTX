@@ -19,6 +19,7 @@
 #include "geometry/primitives_fwd.h"
 #include "geometry/primitives/point.h"
 #include "geometry/primitives/quaternion.h"
+#include "geometry/primitives/transform.h"
 #include "serialization/io_streams_ops.h"
 #include "reflection/reflection.h"
 #include "reflection/proc/io_streams_refl.h"
@@ -80,20 +81,55 @@ struct streaming_stuff
     
     void dump_bsp_mesh(float const *verts, int num_verts, char const * /*map_name*/)
     {
-        static_assert(sizeof(decltype(bsp_mesh_)::value_type) == sizeof(geom::point_3f), "Invalid vertex size");
-        bsp_mesh_.resize(num_verts);
-        memcpy(bsp_mesh_.data(), verts, sizeof(geom::point_3f) * num_verts);
+        vr_streaming::cmd_mesh_t cmd;
+
+        static_assert(sizeof(decltype(cmd.points)::value_type) == sizeof(geom::point_3f), "Invalid vertex size");
+        cmd.points.resize(num_verts);
+        memcpy(cmd.points.data(), verts, sizeof(geom::point_3f) * num_verts);
+
+        append_cmd(cmd);
     }
 
     void send_frame()
     {
+        binary::output_stream os;
+        binary::write(os, user_data_);
+
+        binary::write(os, cmd_bytes_);
+        cmd_bytes_.clear();
+
+        if (encoder_)
+        {
+            bool const ok = encoder_->enqueue_frame(
+                webstream::input_video_frame(
+                256, 
+                256, 
+                webstream::video_format(webstream::video_format::pixel_format_t::Format_RGBA32), 
+                -1,
+                true), reinterpret_cast<uint8_t*>(os.data()), os.size());
+
+            assert(ok);
+        }        
+    }
+
+    void set_matrices(float const *vieworg, float const *viewangles, float const *proj)
+    {
+        auto &sp = user_data_.scene_params;
+
+        //sp.state.orien = !tr.rotation().quaternion();
         
+        geom::cprf const orien(viewangles[0], viewangles[1], viewangles[2]);
+
+        sp.state.orien = geom::quaternionf(orien);
+        sp.state.global_pos = geom::point_3(vieworg[0], vieworg[1], vieworg[2]);
+
+        memcpy(sp.proj.data(), proj, sizeof(float) * 16);
     }
 
 public:
     void on_client_connected() override
     {
-        
+        int aaa = 5;
     }
 
     void on_server_exiting(const char* reason) override
@@ -107,11 +143,26 @@ public:
     }
 
 private:
-    std::vector<geom::point_3f> bsp_mesh_;
 
+    template<typename cmd_t>
+    void append_cmd(cmd_t const &cmd)
+    {
+        binary::bytes_t bytes;
+
+        binary::write(bytes, cmd.id());
+        binary::write(bytes, cmd);
+
+        cmd_bytes_.push_back(std::move(bytes));
+    }
+
+private:
     webstream::stream_server_ptr stream_server_;
     std::unique_ptr<webstream::stream_policy> stream_policy_;
     webstream::encoder_ptr encoder_;
+
+    vr_streaming::user_data_t user_data_;
+
+    std::vector<binary::bytes_t> cmd_bytes_;
 };
 
 std::unique_ptr<streaming_stuff> g_streaming_stuff;
@@ -153,3 +204,9 @@ void streaming_stuff_shutdown()
 {
     g_streaming_stuff.reset();
 }
+
+void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, float const *proj)
+{
+    g_streaming_stuff->set_matrices(vieworg, viewangles, proj);
+}
+

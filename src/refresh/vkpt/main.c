@@ -2290,6 +2290,8 @@ prepare_ubo(refdef_t *fd, mleaf_t* viewleaf, const reference_mode_t* ref_mode, c
 	inverse(V, ubo->invV);
 	inverse(P, ubo->invP);
 
+    streaming_stuff_set_matrices(fd->vieworg, fd->viewangles, P);
+
 	if (cvar_pt_projection->integer == 1 && render_world)
 	{
 		float rad_per_pixel = atanf(tanf(fd->fov_y * M_PI / 360.0f) / ((float)qvk.extent_unscaled.height * 0.5f));
@@ -2763,6 +2765,8 @@ R_RenderFrame_RTX(refdef_t *fd)
 
 		vkpt_submit_command_buffer_simple(post_cmd_buf, qvk.queue_graphics, qtrue);
 	}
+
+    streaming_stuff_send_frame();
 
 	temporal_frame_valid = ref_mode.enable_denoiser;
 
