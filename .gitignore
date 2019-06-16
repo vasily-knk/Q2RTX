@@ -20,3 +20,4 @@ baseq2/*
 *.dll
 *.so
 music/
+.idea/

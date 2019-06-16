@@ -47,6 +47,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <string.h>
 #include <assert.h>
 
+#include "streaming_stuff.h"
+
 cvar_t *cvar_profiler = NULL;
 cvar_t *cvar_vsync = NULL;
 cvar_t *cvar_pt_caustics = NULL;
@@ -1677,7 +1679,7 @@ prepare_entities(EntityUploadInfo* upload_info)
 			}
 		}
 	}
-	
+
 	upload_info->dynamic_vertex_num = num_instanced_vert;
 
 	const uint32_t transparent_model_base_vertex_num = num_instanced_vert;
@@ -2138,7 +2140,7 @@ prepare_ubo(refdef_t *fd, mleaf_t* viewleaf, const reference_mode_t* ref_mode, c
 		// looks too dark with it missing
 		ubo->pt_fake_roughness_threshold = 1.f;
 
-		// swap the checkerboard fields every frame in reference or noisy mode to accumulate 
+		// swap the checkerboard fields every frame in reference or noisy mode to accumulate
 		// both reflection and refraction in every pixel
 		ubo->pt_swap_checkerboard = (qvk.frame_counter & 1);
 
@@ -2266,9 +2268,9 @@ R_RenderFrame_RTX(refdef_t *fd)
 
 	// Sometimes, the readback returns 1.0 luminance instead of the real value.
 	// Ignore these mysterious spikes.
-	if (adapted_luminance != 1.0f) 
+	if (adapted_luminance != 1.0f)
 		prev_adapted_luminance = adapted_luminance;
-	
+
 	if (prev_adapted_luminance <= 0.f)
 		prev_adapted_luminance = 0.005f;
 
@@ -2471,7 +2473,7 @@ R_RenderFrame_RTX(refdef_t *fd)
 		}
 
 		vkpt_pt_trace_lighting(trace_cmd_buf, ref_mode.num_bounce_rays);
-		
+
 		vkpt_submit_command_buffer(
 			trace_cmd_buf,
 			qvk.queue_graphics,
@@ -2533,7 +2535,7 @@ R_RenderFrame_RTX(refdef_t *fd)
 	}
 
 	temporal_frame_valid = ref_mode.enable_denoiser;
-	
+
 	frame_ready = qtrue;
 
 	if (vkpt_refdef.fd && vkpt_refdef.fd->lightstyles) {
@@ -2564,7 +2566,7 @@ static int compare_doubles(const void* pa, const void* pb)
 	double a = *(double*)pa;
 	double b = *(double*)pb;
 
-	if (a < b) return -1; 
+	if (a < b) return -1;
 	if (a > b) return 1;
 	return 0;
 }
@@ -2760,7 +2762,7 @@ R_EndFrame_RTX(void)
 		extent_render_double.width = qvk.extent_render.width * 2;
 		extent_render_double.height = qvk.extent_render.height * 2;
 
-		if (extents_equal(qvk.extent_render, qvk.extent_unscaled) || 
+		if (extents_equal(qvk.extent_render, qvk.extent_unscaled) ||
 			extents_equal(extent_render_double, qvk.extent_unscaled) && drs_current_scale == 0) // don't do nearest filter 2x upscale with DRS enabled
 			vkpt_final_blit_simple(cmd_buf);
 		else
@@ -3264,6 +3266,9 @@ R_BeginRegistration_RTX(const char *name)
 	bsp_mesh_register_textures(bsp);
 	bsp_mesh_create_from_bsp(&vkpt_refdef.bsp_mesh_world, bsp, name);
 	vkpt_light_stats_create(&vkpt_refdef.bsp_mesh_world);
+
+    streaming_stuff_dump_bsp_mesh(vkpt_refdef.bsp_mesh_world.positions, vkpt_refdef.bsp_mesh_world.num_vertices, name);
+
 	_VK(vkpt_vertex_buffer_upload_bsp_mesh_to_staging(&vkpt_refdef.bsp_mesh_world));
 	_VK(vkpt_vertex_buffer_upload_staging());
 	vkpt_refdef.bsp_mesh_world_loaded = 1;
