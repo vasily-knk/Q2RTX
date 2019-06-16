@@ -3262,6 +3262,8 @@ R_Init_RTX(qboolean total)
 		taa_samples[i][1] = halton(3, i + 1) - 0.5f;
 	}
 
+    streaming_stuff_init();
+
 	return qtrue;
 }
 
@@ -3269,6 +3271,8 @@ R_Init_RTX(qboolean total)
 void
 R_Shutdown_RTX(qboolean total)
 {
+    streaming_stuff_shutdown();
+
 	vkpt_freecam_reset();
 
 	vkDeviceWaitIdle(qvk.device);
