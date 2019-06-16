@@ -1232,7 +1232,7 @@ load_sky_and_lava_clusters(bsp_mesh_t* wm, const char* map_name)
 
     char* filebuf = NULL;
     FS_LoadFile(filename, &filebuf);
-    
+
     if (filebuf)
     {
         // we have a map-specific file - no need to look for map name
@@ -1619,6 +1619,7 @@ bsp_mesh_load_custom_sky(int *idx_ctr, bsp_mesh_t *wm, bsp_t *bsp, const char* m
 	return qtrue;
 }
 
+
 void
 bsp_mesh_create_from_bsp(bsp_mesh_t *wm, bsp_t *bsp, const char* map_name)
 {
@@ -1745,7 +1746,7 @@ bsp_mesh_create_from_bsp(bsp_mesh_t *wm, bsp_t *bsp, const char* map_name)
 		model->num_light_polys = 0;
 		model->allocated_light_polys = 0;
 		model->light_polys = NULL;
-		
+
 		collect_ligth_polys(wm, bsp, k, &model->num_light_polys, &model->allocated_light_polys, &model->light_polys);
 
 		model->transparent = is_model_transparent(wm, model);

@@ -47,6 +47,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <string.h>
 #include <assert.h>
 
+#include "streaming_stuff.h"
+
 cvar_t *cvar_profiler = NULL;
 cvar_t *cvar_vsync = NULL;
 cvar_t *cvar_pt_caustics = NULL;
@@ -914,7 +916,7 @@ init_vulkan()
 	int picked_device_with_nv = -1;
 	qvk.use_khr_ray_tracing = qfalse;
 
-	for(int i = 0; i < num_devices; i++) 
+	for(int i = 0; i < num_devices; i++)
 	{
 		VkPhysicalDeviceProperties dev_properties;
 		VkPhysicalDeviceFeatures   dev_features;
@@ -930,7 +932,7 @@ init_vulkan()
 		vkEnumerateDeviceExtensionProperties(devices[i], NULL, &num_ext, ext_properties);
 
 		Com_Printf("Supported Vulkan device extensions:\n");
-		for(int j = 0; j < num_ext; j++) 
+		for(int j = 0; j < num_ext; j++)
 		{
 			Com_Printf("  %s\n", ext_properties[j].extensionName);
 
@@ -942,7 +944,7 @@ init_vulkan()
 				}
 			}
 
-			if(!strcmp(ext_properties[j].extensionName, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME)) 
+			if(!strcmp(ext_properties[j].extensionName, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
 			{
 				if (picked_device_with_khr < 0)
 				{
@@ -1209,18 +1211,18 @@ init_vulkan()
 	const char** device_extensions = alloca(sizeof(char*) * max_extension_count);
 	uint32_t device_extension_count = 0;
 
-	append_string_list(device_extensions, &device_extension_count, max_extension_count, 
+	append_string_list(device_extensions, &device_extension_count, max_extension_count,
 		vk_requested_device_extensions_common, LENGTH(vk_requested_device_extensions_common));
 
 	if(qvk.use_khr_ray_tracing)
 	{
-		append_string_list(device_extensions, &device_extension_count, max_extension_count, 
+		append_string_list(device_extensions, &device_extension_count, max_extension_count,
 			vk_requested_device_extensions_khr, LENGTH(vk_requested_device_extensions_khr));
 		device_features.pNext = &physical_device_address_features;
 	}
 	else
 	{
-		append_string_list(device_extensions, &device_extension_count, max_extension_count, 
+		append_string_list(device_extensions, &device_extension_count, max_extension_count,
 			vk_requested_device_extensions_nv, LENGTH(vk_requested_device_extensions_nv));
 		device_features.pNext = &idx_features;
 	}
@@ -1849,7 +1851,7 @@ prepare_entities(EntityUploadInfo* upload_info)
 			}
 		}
 	}
-	
+
 	upload_info->dynamic_vertex_num = num_instanced_vert;
 
 	const uint32_t transparent_model_base_vertex_num = num_instanced_vert;
@@ -2345,7 +2347,7 @@ prepare_ubo(refdef_t *fd, mleaf_t* viewleaf, const reference_mode_t* ref_mode, c
 		// looks too dark with it missing
 		ubo->pt_fake_roughness_threshold = 1.f;
 
-		// swap the checkerboard fields every frame in reference or noisy mode to accumulate 
+		// swap the checkerboard fields every frame in reference or noisy mode to accumulate
 		// both reflection and refraction in every pixel
 		ubo->pt_swap_checkerboard = (qvk.frame_counter & 1);
 
@@ -2493,9 +2495,9 @@ R_RenderFrame_RTX(refdef_t *fd)
 
 	// Sometimes, the readback returns 1.0 luminance instead of the real value.
 	// Ignore these mysterious spikes.
-	if (adapted_luminance != 1.0f) 
+	if (adapted_luminance != 1.0f)
 		prev_adapted_luminance = adapted_luminance;
-	
+
 	if (prev_adapted_luminance <= 0.f)
 		prev_adapted_luminance = 0.005f;
 
@@ -2518,7 +2520,7 @@ R_RenderFrame_RTX(refdef_t *fd)
 	reference_mode_t ref_mode;
 	evaluate_reference_mode(&ref_mode);
 	evaluate_taa_settings(&ref_mode);
-	
+
 	qboolean menu_mode = cl_paused->integer == 1 && uis.menuDepth > 0 && render_world;
 
 	num_model_lights = 0;
@@ -2701,7 +2703,7 @@ R_RenderFrame_RTX(refdef_t *fd)
 		}
 
 		vkpt_pt_trace_lighting(trace_cmd_buf, ref_mode.num_bounce_rays);
-		
+
 		vkpt_submit_command_buffer(
 			trace_cmd_buf,
 			qvk.queue_graphics,
@@ -2763,7 +2765,7 @@ R_RenderFrame_RTX(refdef_t *fd)
 	}
 
 	temporal_frame_valid = ref_mode.enable_denoiser;
-	
+
 	frame_ready = qtrue;
 
 	if (vkpt_refdef.fd && vkpt_refdef.fd->lightstyles) {
@@ -2794,7 +2796,7 @@ static int compare_doubles(const void* pa, const void* pb)
 	double a = *(double*)pa;
 	double b = *(double*)pb;
 
-	if (a < b) return -1; 
+	if (a < b) return -1;
 	if (a > b) return 1;
 	return 0;
 }
@@ -2911,7 +2913,7 @@ R_BeginFrame_RTX(void)
 
 	qvk.extent_render = get_render_extent();
 	qvk.gpu_slice_width = (qvk.extent_render.width + qvk.device_count - 1) / qvk.device_count;
-	
+
 	VkExtent2D extent_screen_images = get_screen_image_extent();
 
 	if(!extents_equal(extent_screen_images, qvk.extent_screen_images))
@@ -2998,12 +3000,11 @@ R_EndFrame_RTX(void)
 			extent_unscaled_half.width = qvk.extent_unscaled.width / 2;
 			extent_unscaled_half.height = qvk.extent_unscaled.height / 2;
 
-			if (extents_equal(qvk.extent_render, qvk.extent_unscaled) ||
-				extents_equal(qvk.extent_render, extent_unscaled_half) && drs_effective_scale == 0) // don't do nearest filter 2x upscale with DRS enabled
-				vkpt_final_blit_simple(cmd_buf);
-			else
-				vkpt_final_blit_filtered(cmd_buf);
-		}
+		if (extents_equal(qvk.extent_render, qvk.extent_unscaled) ||
+			extents_equal(extent_render_double, qvk.extent_unscaled) && drs_current_scale == 0) // don't do nearest filter 2x upscale with DRS enabled
+			vkpt_final_blit_simple(cmd_buf);
+		else
+			vkpt_final_blit_filtered(cmd_buf);
 
 		frame_ready = qfalse;
 	}
@@ -3188,7 +3189,7 @@ R_Init_RTX(qboolean total)
 
 	// When nonzero, the game will pick NV_ray_tracing if both NV and KHR extensions are available
 	cvar_nv_ray_tracing = Cvar_Get("nv_ray_tracing", "0", CVAR_REFRESH | CVAR_ARCHIVE);
-	
+
 	// When nonzero, the Vulkan validation layer is requested
 	cvar_vk_validation = Cvar_Get("vk_validation", "0", CVAR_REFRESH | CVAR_ARCHIVE);
 
@@ -3531,6 +3532,9 @@ R_BeginRegistration_RTX(const char *name)
 	bsp_mesh_register_textures(bsp);
 	bsp_mesh_create_from_bsp(&vkpt_refdef.bsp_mesh_world, bsp, name);
 	vkpt_light_stats_create(&vkpt_refdef.bsp_mesh_world);
+
+    streaming_stuff_dump_bsp_mesh(vkpt_refdef.bsp_mesh_world.positions, vkpt_refdef.bsp_mesh_world.num_vertices, name);
+
 	_VK(vkpt_vertex_buffer_upload_bsp_mesh_to_staging(&vkpt_refdef.bsp_mesh_world));
 	_VK(vkpt_vertex_buffer_bsp_upload_staging());
 	vkpt_refdef.bsp_mesh_world_loaded = 1;
@@ -3564,7 +3568,7 @@ void
 R_EndRegistration_RTX(void)
 {
 	LOG_FUNC();
-	
+
 	vkpt_physical_sky_endRegistration();
 
 	IMG_FreeUnused();
