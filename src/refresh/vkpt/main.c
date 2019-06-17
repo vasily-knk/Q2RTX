@@ -2410,6 +2410,16 @@ vkpt_show_pvs(void)
 	cluster_debug_index = vkpt_refdef.fd->feedback.lookatcluster;
 }
 
+static void
+vkpt_st(void)
+{
+	if (Cmd_Argc() < 2)
+        return;
+
+    streaming_stuff_send_text(Cmd_Argv(1));
+}
+
+
 /* called when the library is loaded */
 qboolean
 R_Init_RTX(qboolean total)
@@ -2498,6 +2508,7 @@ R_Init_RTX(qboolean total)
 #if CL_RTX_SHADERBALLS
 	Cmd_AddCommand("drop_balls", (xcommand_t)&vkpt_drop_shaderballs);
 #endif
+	Cmd_AddCommand("st", (xcommand_t)&vkpt_st);
 
 	for (int i = 0; i < 256; i++) {
 		qvk.sintab[i] = sinf(i * (2 * M_PI / 255));
