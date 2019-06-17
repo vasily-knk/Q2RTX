@@ -14,6 +14,8 @@ void streaming_stuff_shutdown();
 
 void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, float const *proj);
 
+void streaming_stuff_send_text(char const *text);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

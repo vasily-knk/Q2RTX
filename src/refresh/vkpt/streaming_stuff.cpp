@@ -23,6 +23,7 @@
 #include "serialization/io_streams_ops.h"
 #include "reflection/reflection.h"
 #include "reflection/proc/io_streams_refl.h"
+#include <thread>
 
 namespace geom
 {
@@ -109,7 +110,9 @@ struct streaming_stuff
                 true), reinterpret_cast<uint8_t*>(os.data()), os.size());
 
             assert(ok);
-        }        
+        }
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     void set_matrices(float const *vieworg, float const *viewangles, float const *proj)
@@ -124,6 +127,15 @@ struct streaming_stuff
         sp.state.global_pos = geom::point_3(vieworg[0], vieworg[1], vieworg[2]);
 
         memcpy(sp.proj.data(), proj, sizeof(float) * 16);
+    }
+
+    void send_text(char const *text)
+    {
+        vr_streaming::cmd_test_t cmd;
+
+        cmd.text = text;
+
+        append_cmd(cmd);
     }
 
 public:
@@ -209,4 +221,10 @@ void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles,
 {
     g_streaming_stuff->set_matrices(vieworg, viewangles, proj);
 }
+
+void streaming_stuff_send_text(char const *text)
+{
+    g_streaming_stuff->send_text(text);
+}
+
 
