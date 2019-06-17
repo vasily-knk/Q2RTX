@@ -118,7 +118,7 @@ struct streaming_stuff
 
         //sp.state.orien = !tr.rotation().quaternion();
         
-        geom::cprf const orien(viewangles[0], viewangles[1], viewangles[2]);
+        geom::cprf const orien(90.f - viewangles[1], -viewangles[0], viewangles[2]);
 
         sp.state.orien = geom::quaternionf(orien);
         sp.state.global_pos = geom::point_3(vieworg[0], vieworg[1], vieworg[2]);
