@@ -91,8 +91,10 @@ struct streaming_stuff
         append_cmd(cmd);
     }
 
-    void send_frame()
+    void send_frame(uint64_t vk_image, unsigned width, unsigned height)
     {
+        user_data_.vk_image = vk_image;
+        
         binary::output_stream os;
         binary::write(os, user_data_);
 
@@ -103,8 +105,8 @@ struct streaming_stuff
         {
             bool const ok = encoder_->enqueue_frame(
                 webstream::input_video_frame(
-                256, 
-                256, 
+                width, 
+                height, 
                 webstream::video_format(webstream::video_format::pixel_format_t::Format_RGBA32), 
                 -1,
                 true), reinterpret_cast<uint8_t*>(os.data()), os.size());
@@ -207,9 +209,9 @@ void streaming_stuff_init()
     g_streaming_stuff = std::make_unique<streaming_stuff>();
 }
 
-void streaming_stuff_send_frame()
+void streaming_stuff_send_frame(uint64_t vk_image, unsigned width, unsigned height)
 {
-    g_streaming_stuff->send_frame();
+    g_streaming_stuff->send_frame(vk_image, width, height);
 }
 
 void streaming_stuff_shutdown()
