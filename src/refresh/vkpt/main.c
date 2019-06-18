@@ -2536,7 +2536,7 @@ R_RenderFrame_RTX(refdef_t *fd)
 		vkpt_submit_command_buffer_simple(post_cmd_buf, qvk.queue_graphics, qtrue);
 	}
 
-    streaming_stuff_send_frame((uint64_t)qvk.images[VKPT_IMG_TAA_OUTPUT], qvk.extent.width, qvk.extent.height);
+    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], qvk.extent.width, qvk.extent.height);
 
 	temporal_frame_valid = ref_mode.enable_denoiser;
 
@@ -2883,9 +2883,6 @@ vkpt_show_pvs(void)
 static void
 vkpt_st(void)
 {
-	if (Cmd_Argc() < 2)
-        return;
-
     streaming_stuff_send_text(Cmd_Argv(1));
 }
 
