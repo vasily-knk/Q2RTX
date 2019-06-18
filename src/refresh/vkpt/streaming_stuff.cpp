@@ -130,6 +130,13 @@ struct streaming_stuff
         sp.desired_orien = sp.state.orien;
 
         memcpy(sp.proj.data(), proj, sizeof(float) * 16);
+
+        
+        // todo: fact hack, may break any minute!
+        for (float &v : sp.proj)
+            v *= -1.f;
+
+        sp.proj[0] *= -1.f;
     }
 
     void send_text(char const *text)
