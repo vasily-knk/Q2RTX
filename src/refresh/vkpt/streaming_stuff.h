@@ -9,12 +9,14 @@ extern "C"
 void streaming_stuff_dump_bsp_mesh(float const *verts, int num_verts, char const *map_name);
 
 void streaming_stuff_init();
-void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height);
+void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height, void *fence);
 void streaming_stuff_shutdown();
 
 void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, float const *proj);
 
 void streaming_stuff_send_text(char const *text);
+
+int streaming_stuff_check_fence(void *fence);
 
 #ifdef __cplusplus
 }
