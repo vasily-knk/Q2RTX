@@ -52,6 +52,11 @@ __pragma(comment(lib, "ws_server64.lib"))
 namespace
 {
 
+int check_fence(void * fence)
+{
+    return streaming_stuff_check_fence(fence);
+}
+
 struct streaming_stuff
     : webstream::stream_server_callback
 {
@@ -91,8 +96,11 @@ struct streaming_stuff
         append_cmd(cmd);
     }
 
-    void send_frame(void *vk_image, unsigned width, unsigned height)
+    void send_frame(void *vk_image, unsigned width, unsigned height, void *fence)
     {
+        user_data_.check_fence = check_fence;
+        user_data_.fence = fence;
+
         binary::output_stream os;
         binary::write(os, user_data_);
 
@@ -215,9 +223,9 @@ void streaming_stuff_init()
     g_streaming_stuff = std::make_unique<streaming_stuff>();
 }
 
-void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height)
+void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height, void *fence)
 {
-    g_streaming_stuff->send_frame(vk_image, width, height);
+    g_streaming_stuff->send_frame(vk_image, width, height, fence);
 }
 
 void streaming_stuff_shutdown()
