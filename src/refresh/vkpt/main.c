@@ -2193,7 +2193,6 @@ R_RenderFrame_RTX(refdef_t *fd)
 		vkpt_submit_command_buffer_simple(post_cmd_buf, qvk.queue_graphics, qtrue);
 	}
 
-    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], qvk.extent.width, qvk.extent.height);
 
 	temporal_frame_valid = qtrue;
 	frame_ready = qtrue;
@@ -2285,6 +2284,23 @@ retry:;
 	SCR_SetHudAlpha(1.f);
 }
 
+int streaming_stuff_check_fence(void *fence)
+{
+	VkFence fence_cast = (VkFence)fence;
+    
+    VkResult res_fence = vkWaitForFences(qvk.device, 1, &fence_cast, VK_TRUE, 0);
+
+    if (res_fence == VK_SUCCESS)
+        return 1;
+
+    if (res_fence == VK_TIMEOUT)
+        return 0;
+
+    assert(0 && "Unexpected fence wait result");
+    return 0;
+}
+
+
 void
 R_EndFrame_RTX(void)
 {
@@ -2326,6 +2342,9 @@ R_EndFrame_RTX(void)
 		LENGTH(wait_semaphores), wait_semaphores, wait_stages, wait_device_indices,
 		qvk.device_count, signal_semaphores, signal_device_indices,
 		qvk.fences_frame_sync[qvk.current_frame_index]);
+
+    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], qvk.extent.width, qvk.extent.height, qvk.fences_frame_sync[qvk.current_frame_index]);
+
 
 
 #ifdef VKPT_IMAGE_DUMPS
