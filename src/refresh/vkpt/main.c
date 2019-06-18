@@ -3282,8 +3282,18 @@ R_BeginRegistration_RTX(const char *name)
 	bsp_mesh_register_textures(bsp);
 	bsp_mesh_create_from_bsp(&vkpt_refdef.bsp_mesh_world, bsp, name);
 	vkpt_light_stats_create(&vkpt_refdef.bsp_mesh_world);
+    {
+        int num_world_vets = vkpt_refdef.bsp_mesh_world.num_vertices;
 
-    streaming_stuff_dump_bsp_mesh(vkpt_refdef.bsp_mesh_world.positions, vkpt_refdef.bsp_mesh_world.num_vertices, name);
+        for (int i = 0; i < vkpt_refdef.bsp_mesh_world.num_models; ++i)
+        {
+            auto const new_val = vkpt_refdef.bsp_mesh_world.models[i].idx_offset;
+            if (new_val < num_world_vets)
+                num_world_vets = new_val;
+        }
+
+        streaming_stuff_dump_bsp_mesh(vkpt_refdef.bsp_mesh_world.positions, num_world_vets, name);
+    }
 
 	_VK(vkpt_vertex_buffer_upload_bsp_mesh_to_staging(&vkpt_refdef.bsp_mesh_world));
 	_VK(vkpt_vertex_buffer_upload_staging());
