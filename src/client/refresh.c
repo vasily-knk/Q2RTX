@@ -335,8 +335,11 @@ void CL_InitRefresh(void)
 #if REF_GL && REF_VKPT
 	if (vid_rtx->integer)
 		R_RegisterFunctionsRTX();
-	else
+	else if (0)
 		R_RegisterFunctionsGL();
+    else
+        R_RegisterFunctionsWombat();
+
 #elif REF_GL
 	R_RegisterFunctionsGL();
 #elif REF_VKPT

@@ -288,4 +288,7 @@ void R_RegisterFunctionsGL();
 void R_RegisterFunctionsRTX();
 #endif
 
+void R_RegisterFunctionsWombat();
+
+
 #endif // REFRESH_H

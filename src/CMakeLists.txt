@@ -209,6 +209,14 @@ SET(HEADERS_GL
 	refresh/gl/gl.h
 )
 
+SET(SRC_WOMBAT
+	refresh/wombat/ref_wombat.cpp
+)
+
+
+SET(HEADERS_WOMBAT
+)
+
 SET(SRC_SHARED
 	shared/m_flash.c
 	shared/shared.c
@@ -438,6 +446,9 @@ IF (CONFIG_VKPT_RENDERER)
 	TARGET_LINK_LIBRARIES(client vulkan)
 	ENDIF()
 ENDIF()
+
+TARGET_SOURCES(client PRIVATE ${SRC_WOMBAT} ${HEADERS_WOMBAT})
+
 
 TARGET_LINK_LIBRARIES(client stb)
 TARGET_LINK_LIBRARIES(client tinyobjloader)
