@@ -33,7 +33,7 @@ void VID_PumpEvents(void);
 void VID_SetMode(void);
 char *VID_GetDefaultModeList(void);
 
-typedef enum { GAPI_OPENGL, GAPI_VULKAN } graphics_api_t;
+typedef enum { GAPI_OPENGL, GAPI_VULKAN, GAPI_CUSTOM } graphics_api_t;
 
 qboolean    VID_Init(graphics_api_t api);
 void        VID_Shutdown(void);
