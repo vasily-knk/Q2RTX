@@ -8,27 +8,43 @@ extern "C"
 #include "refresh/refresh.h"
 #include "refresh/images.h"
 #include "refresh/models.h"
+#include "client/video.h"
 
 void R_RegisterFunctionsWombat();
+
+    int registration_sequence;
+
 
 }
 
 std::ofstream log_stream("D:\\log.txt");
 
 
-#define LOGME() log_stream << __FUNCTION__ << std::endl;
+#define LOGME() // log_stream << __FUNCTION__ << std::endl;
 
 qboolean R_Init_Wombat(qboolean total)
 {
     LOGME();
 
+	registration_sequence = 1;
+
+	if (!VID_Init(GAPI_VULKAN)) {
+		Com_Error(ERR_FATAL, "VID_Init failed\n");
+		return qfalse;
+
+	}
     IMG_Init();
 
     return qtrue;
 }
 
 void R_Shutdown_Wombat(qboolean total) { LOGME(); }
-void R_BeginRegistration_Wombat(const char *map) { LOGME(); }
+void R_BeginRegistration_Wombat(const char *map)
+{
+    LOGME();
+    registration_sequence++;
+}
+
 void R_SetSky_Wombat(const char *name, float rotate, vec3_t axis) { LOGME(); }
 void R_EndRegistration_Wombat(void) { LOGME(); }
 void R_RenderFrame_Wombat(refdef_t *fd) { LOGME(); }
@@ -65,7 +81,9 @@ qboolean R_InterceptKey_Wombat(unsigned key, qboolean down)
 void IMG_Unload_Wombat(image_t *image) { LOGME(); }
 void IMG_Load_Wombat(image_t *image, byte *pic)
 {
-    LOGME();
+    log_stream << __FUNCTION__ << ": " << image->name << std::endl;
+
+    image->pix_data = pic;
 }
 byte*  IMG_ReadPixels_Wombat(int *width, int *height, int *rowbytes)
 {
