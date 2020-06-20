@@ -1,5 +1,11 @@
 #include <iostream>
 #include <fstream>
+#include <memory>
+
+#include <SDL.h>
+#include <SDL_syswm.h>
+
+#include "wombat_android_test/wombat_android_test.h"
 
 extern "C"
 {
@@ -10,17 +16,29 @@ extern "C"
 #include "refresh/models.h"
 #include "client/video.h"
 
+
+
 void R_RegisterFunctionsWombat();
 
     int registration_sequence;
 
+    extern SDL_Window       *sdl_window;
 
 }
 
-std::ofstream log_stream("D:\\log.txt");
-
+__pragma(comment(lib, "wombat_android_test.lib"))
 
 #define LOGME() // log_stream << __FUNCTION__ << std::endl;
+
+namespace
+{
+    namespace wat = wombat_android_test;
+
+    std::ofstream log_stream("D:\\log.txt");
+    std::shared_ptr<wat::iface> g_iface;
+
+    bool g_valid_fbo = false;
+} // namespace
 
 qboolean R_Init_Wombat(qboolean total)
 {
@@ -33,7 +51,26 @@ qboolean R_Init_Wombat(qboolean total)
 		return qfalse;
 
 	}
+
     IMG_Init();
+
+    g_iface = std::shared_ptr<wat::iface>(
+        wat::create({false}),
+        wat::destroy
+    );
+
+    SDL_SysWMinfo wmInfo;
+
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(sdl_window, &wmInfo);
+    HWND const hwnd = wmInfo.info.win.window;
+
+    g_iface->init({
+        hwnd,
+        nullptr
+    });
+
+    g_valid_fbo = false;
 
     return qtrue;
 }
@@ -47,7 +84,56 @@ void R_BeginRegistration_Wombat(const char *map)
 
 void R_SetSky_Wombat(const char *name, float rotate, vec3_t axis) { LOGME(); }
 void R_EndRegistration_Wombat(void) { LOGME(); }
-void R_RenderFrame_Wombat(refdef_t *fd) { LOGME(); }
+void R_RenderFrame_Wombat(refdef_t *fd)
+{
+    if (!g_valid_fbo)
+    {
+        g_iface->invalidate_fbo(fd->width, fd->height);
+        g_valid_fbo = true;
+    }
+
+    wombat_android_test::update_args_t update_args;
+
+    float matrix[16] = {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+    };
+    
+    update_args.head_matrix = matrix;
+    update_args.time_delta = 0;
+
+    g_iface->update(update_args);
+
+    wombat_android_test::render_pass_args_t pass_args;
+
+
+    pass_args.vp_rect = {
+        fd->x,
+        fd->y,
+        fd->width,
+        fd->height,
+    };
+
+    float hfov = 60.f;
+    float vfov = 60.f;
+
+    pass_args.fov_rect = {
+        hfov, hfov,
+        vfov, vfov,
+    };
+
+    pass_args.eye_matrix = matrix;
+
+    wombat_android_test::render_args_t render_args;
+    render_args.num_passes = 1;
+    render_args.passes = &pass_args;
+
+    g_iface->render(render_args);
+    g_iface->swap_buffers();
+}
+
 void R_LightPoint_Wombat(vec3_t origin, vec3_t light) { LOGME(); }
 void R_ClearColor_Wombat(void) { LOGME(); }
 void R_SetAlpha_Wombat(float clpha) { LOGME(); }
@@ -68,9 +154,17 @@ void R_DrawStretchPic_Wombat(int x, int y, int w, int h, qhandle_t pic) { LOGME(
 void R_TileClear_Wombat(int x, int y, int w, int h, qhandle_t pic) { LOGME(); }
 void R_DrawFill8_Wombat(int x, int y, int w, int h, int c) { LOGME(); }
 void R_DrawFill32_Wombat(int x, int y, int w, int h, uint32_t color) { LOGME(); }
-void R_BeginFrame_Wombat(void) { LOGME(); }
-void R_EndFrame_Wombat(void) { LOGME(); }
-void R_ModeChanged_Wombat(int width, int height, int flags, int rowbytes, void *pixels) { LOGME(); }
+void R_BeginFrame_Wombat(void)
+{
+
+}
+void R_EndFrame_Wombat(void) {
+
+}
+void R_ModeChanged_Wombat(int width, int height, int flags, int rowbytes, void *pixels)
+{ 
+    g_valid_fbo = false;
+}
 void R_AddDecal_Wombat(decal_t *d) { LOGME(); }
 qboolean R_InterceptKey_Wombat(unsigned key, qboolean down)
 {
