@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <vector>
+#include <array>
 
 #include <SDL.h>
 #include <SDL_syswm.h>
@@ -19,12 +21,18 @@ extern "C"
 #include "refresh/models.h"
 #include "client/video.h"
 
-
-void R_RegisterFunctionsWombat();
+    
+    void R_RegisterFunctionsWombat();
 
     int registration_sequence;
 
     extern SDL_Window       *sdl_window;
+
+
+    typedef struct bsp_s bsp_t;
+    bsp_t *GL_GetBSP();
+
+    vec3_t *extract_bsp_mesh_vertices(bsp_t *bsp, const char* map_name, int *out_num_verts);
 
 }
 
@@ -36,12 +44,6 @@ namespace
 {
     namespace wat = wombat_android_test;
 
-    std::ofstream log_stream("D:\\log.txt");
-    std::shared_ptr<wat::iface> g_iface;
-
-    bool g_valid_fbo = false;
-    uint32_t g_fbo_width = 0;
-    uint32_t g_fbo_height = 0;
 
     struct ref_functions_t
     {
@@ -83,7 +85,18 @@ namespace
         void(*MOD_Reference)(model_t *model) = NULL;        
     };
 
+    std::shared_ptr<wat::iface> g_iface;
+
+    bool g_valid_fbo = false;
+    uint32_t g_fbo_width = 0;
+    uint32_t g_fbo_height = 0;
+
     ref_functions_t g_gl_functions;
+
+    std::vector<ref_wombat_internal::vec3_t> g_bsp_verts;
+
+
+
 } // namespace
 
 qboolean R_Init_Wombat(qboolean total)
@@ -118,6 +131,9 @@ qboolean R_Init_Wombat(qboolean total)
 
     g_valid_fbo = false;
 
+    g_iface->on_text_message(0, "helicopter 0");
+    g_iface->on_text_message(0, "interpolator 2 3");
+
     //SDL_GL_MakeCurrent(win, context);
 
     return qtrue;
@@ -133,6 +149,17 @@ void R_Shutdown_Wombat(qboolean total)
 void R_BeginRegistration_Wombat(const char *map)
 {
     g_gl_functions.R_BeginRegistration(map);
+
+    auto *bsp = GL_GetBSP();
+
+    int num_verts;
+    auto *verts = reinterpret_cast<ref_wombat_internal::vec3_t*>(extract_bsp_mesh_vertices(bsp, map, &num_verts));
+
+    ref_wombat_internal::dump_bsp_vertices(reinterpret_cast<float*>(verts), num_verts, g_iface.get());
+
+
+    Z_Free(verts);
+
 }
 
 void R_SetSky_Wombat(const char *name, float rotate, vec3_t axis) { LOGME(); }
@@ -241,8 +268,6 @@ qboolean R_InterceptKey_Wombat(unsigned key, qboolean down)
 void IMG_Unload_Wombat(image_t *image) { LOGME(); }
 void IMG_Load_Wombat(image_t *image, byte *pic)
 {
-    log_stream << __FUNCTION__ << ": " << image->name << std::endl;
-
     image->pix_data = pic;
 }
 byte*  IMG_ReadPixels_Wombat(int *width, int *height, int *rowbytes)
