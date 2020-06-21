@@ -38,6 +38,8 @@ namespace
     std::shared_ptr<wat::iface> g_iface;
 
     bool g_valid_fbo = false;
+    uint32_t g_fbo_width = 0;
+    uint32_t g_fbo_height = 0;
 } // namespace
 
 qboolean R_Init_Wombat(qboolean total)
@@ -88,7 +90,7 @@ void R_RenderFrame_Wombat(refdef_t *fd)
 {
     if (!g_valid_fbo)
     {
-        g_iface->invalidate_fbo(fd->width, fd->height);
+        g_iface->invalidate_fbo(g_fbo_width, g_fbo_height);
         g_valid_fbo = true;
     }
 
@@ -100,6 +102,43 @@ void R_RenderFrame_Wombat(refdef_t *fd)
         0, 0, 1, 0,
         0, 0, 0, 1,
     };
+
+    {
+        vec3_t viewaxis[3];
+
+        AnglesToAxis(fd->viewangles, viewaxis);
+
+        {
+            size_t constexpr i = 1;
+            matrix[0] = -viewaxis[i][0];
+            matrix[4] = -viewaxis[i][1];
+            matrix[8] = -viewaxis[i][2];
+            matrix[12] = 0;//DotProduct(viewaxis[i], fd->vieworg);
+        }
+
+        {
+            size_t constexpr i = 2;
+
+            matrix[1] = viewaxis[i][0];
+            matrix[5] = viewaxis[i][1];
+            matrix[9] = viewaxis[i][2];
+            matrix[13] = 0;//-DotProduct(viewaxis[i], fd->vieworg);
+        }
+
+        {
+            size_t constexpr i = 0;
+
+            matrix[2] = -viewaxis[i][0];
+            matrix[6] = -viewaxis[i][1];
+            matrix[10] = -viewaxis[i][2];
+            matrix[14] = 0;//DotProduct(viewaxis[i], fd->vieworg);
+        }
+
+        matrix[3] = 0;
+        matrix[7] = 0;
+        matrix[11] = 0;
+        matrix[15] = 1;
+    }
     
     update_args.head_matrix = matrix;
     update_args.time_delta = 0;
@@ -108,23 +147,29 @@ void R_RenderFrame_Wombat(refdef_t *fd)
 
     wombat_android_test::render_pass_args_t pass_args;
 
-
     pass_args.vp_rect = {
-        fd->x,
-        fd->y,
-        fd->width,
-        fd->height,
+        0,
+        0,
+        int32_t(g_fbo_width),
+        int32_t(g_fbo_height),
     };
 
-    float hfov = 60.f;
-    float vfov = 60.f;
+    float const hfov = fd->fov_x * 0.5f;
+    float const vfov = fd->fov_y * 0.5f;
 
     pass_args.fov_rect = {
         hfov, hfov,
         vfov, vfov,
     };
 
-    pass_args.eye_matrix = matrix;
+    float eye_matrix[16] = {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+    };
+
+    pass_args.eye_matrix = eye_matrix;
 
     wombat_android_test::render_args_t render_args;
     render_args.num_passes = 1;
@@ -164,6 +209,8 @@ void R_EndFrame_Wombat(void) {
 void R_ModeChanged_Wombat(int width, int height, int flags, int rowbytes, void *pixels)
 { 
     g_valid_fbo = false;
+    g_fbo_width = width;
+    g_fbo_height = height;
 }
 void R_AddDecal_Wombat(decal_t *d) { LOGME(); }
 qboolean R_InterceptKey_Wombat(unsigned key, qboolean down)
