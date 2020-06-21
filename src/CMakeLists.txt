@@ -211,10 +211,12 @@ SET(HEADERS_GL
 
 SET(SRC_WOMBAT
 	refresh/wombat/ref_wombat.cpp
+	refresh/wombat/ref_wombat_internal.cpp
 )
 
 
 SET(HEADERS_WOMBAT
+	refresh/wombat/ref_wombat_internal.h
 )
 
 SET(SRC_SHARED
@@ -609,3 +611,4 @@ ENDIF()
 
 TARGET_INCLUDE_DIRECTORIES(client PRIVATE $ENV{SIMLABS_REPO_VR}/src/_Include)
 TARGET_INCLUDE_DIRECTORIES(client PRIVATE $ENV{SIMLABS_REPO_VR}/src/aerodrome/_aerodrome_include)
+TARGET_INCLUDE_DIRECTORIES(client PRIVATE $ENV{SIMLABS_REPO_VR}/ext/include)
