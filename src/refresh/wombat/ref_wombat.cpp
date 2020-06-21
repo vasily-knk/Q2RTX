@@ -99,7 +99,7 @@ qboolean R_Init_Wombat(qboolean total)
 
 
     g_iface = std::shared_ptr<wat::iface>(
-        wat::create({false, false}),
+        wat::create({false, true, false}),
         wat::destroy
     );
 

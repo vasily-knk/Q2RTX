@@ -25,12 +25,12 @@ namespace ref_wombat_internal
 {
 void fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix)
 {
-    geom::cprf const orien(90.f - viewangles[1], -viewangles[0], viewangles[2]);
+    geom::cprf const orien(- viewangles[1], -viewangles[0], viewangles[2]);
     geom::point_3f const pos;//(vieworg[0], vieworg[1], vieworg[2]);
 
     geom::transform_4f const tr(geom::as_translation(pos), orien);
 
-    auto const &m = tr.direct_matrix();
+    auto const &m = tr.inverse_matrix();
 
     memcpy(dst_matrix, m.rawdata(), 16 * sizeof(float));
 }
