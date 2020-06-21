@@ -6,6 +6,7 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
+
 #include "wombat_android_test/wombat_android_test.h"
 #include "ref_wombat_internal.h"
 
@@ -122,11 +123,16 @@ qboolean R_Init_Wombat(qboolean total)
     return qtrue;
 }
 
-void R_Shutdown_Wombat(qboolean total) { LOGME(); }
+void R_Shutdown_Wombat(qboolean total)
+{
+    g_iface.reset();
+
+    g_gl_functions.R_Shutdown(total);
+}
+
 void R_BeginRegistration_Wombat(const char *map)
 {
-    LOGME();
-    registration_sequence++;
+    g_gl_functions.R_BeginRegistration(map);
 }
 
 void R_SetSky_Wombat(const char *name, float rotate, vec3_t axis) { LOGME(); }
@@ -293,8 +299,8 @@ void R_RegisterFunctionsWombat()
 
 
     R_Init = R_Init_Wombat;
-	// R_Shutdown = R_Shutdown_Wombat;
-	// R_BeginRegistration = R_BeginRegistration_Wombat;
+	R_Shutdown = R_Shutdown_Wombat;
+	R_BeginRegistration = R_BeginRegistration_Wombat;
 	// R_EndRegistration = R_EndRegistration_Wombat;
 	// R_SetSky = R_SetSky_Wombat;
 	R_RenderFrame = R_RenderFrame_Wombat;
