@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -6,6 +7,7 @@
 #include <SDL_syswm.h>
 
 #include "wombat_android_test/wombat_android_test.h"
+#include "ref_wombat_internal.h"
 
 extern "C"
 {
@@ -15,7 +17,6 @@ extern "C"
 #include "refresh/images.h"
 #include "refresh/models.h"
 #include "client/video.h"
-
 
 
 void R_RegisterFunctionsWombat();
@@ -40,32 +41,74 @@ namespace
     bool g_valid_fbo = false;
     uint32_t g_fbo_width = 0;
     uint32_t g_fbo_height = 0;
+
+    struct ref_functions_t
+    {
+        qboolean(*R_Init)(qboolean total) = NULL;
+        void(*R_Shutdown)(qboolean total) = NULL;
+        void(*R_BeginRegistration)(const char *map) = NULL;
+        void(*R_SetSky)(const char *name, float rotate, vec3_t axis) = NULL;
+        void(*R_EndRegistration)(void) = NULL;
+        void(*R_RenderFrame)(refdef_t *fd) = NULL;
+        void(*R_LightPoint)(vec3_t origin, vec3_t light) = NULL;
+        void(*R_ClearColor)(void) = NULL;
+        void(*R_SetAlpha)(float clpha) = NULL;
+        void(*R_SetAlphaScale)(float alpha) = NULL;
+        void(*R_SetColor)(uint32_t color) = NULL;
+        void(*R_SetClipRect)(const clipRect_t *clip) = NULL;
+        void(*R_SetScale)(float scale) = NULL;
+        void(*R_DrawChar)(int x, int y, int flags, int ch, qhandle_t font) = NULL;
+        int(*R_DrawString)(int x, int y, int flags, size_t maxChars,
+	        const char *string, qhandle_t font) = NULL;
+        void(*R_DrawPic)(int x, int y, qhandle_t pic) = NULL;
+        void(*R_DrawStretchPic)(int x, int y, int w, int h, qhandle_t pic) = NULL;
+        void(*R_TileClear)(int x, int y, int w, int h, qhandle_t pic) = NULL;
+        void(*R_DrawFill8)(int x, int y, int w, int h, int c) = NULL;
+        void(*R_DrawFill32)(int x, int y, int w, int h, uint32_t color) = NULL;
+        void(*R_BeginFrame)(void) = NULL;
+        void(*R_EndFrame)(void) = NULL;
+        void(*R_ModeChanged)(int width, int height, int flags, int rowbytes, void *pixels) = NULL;
+        void(*R_AddDecal)(decal_t *d) = NULL;
+        qboolean(*R_InterceptKey)(unsigned key, qboolean down) = NULL;
+
+        void(*IMG_Unload)(image_t *image) = NULL;
+        void(*IMG_Load)(image_t *image, byte *pic) = NULL;
+        byte* (*IMG_ReadPixels)(int *width, int *height, int *rowbytes) = NULL;
+
+        qerror_t(*MOD_LoadMD2)(model_t *model, const void *rawdata, size_t length) = NULL;
+        #if USE_MD3
+        qerror_t(*MOD_LoadMD3)(model_t *model, const void *rawdata, size_t length) = NULL;
+        #endif
+        void(*MOD_Reference)(model_t *model) = NULL;        
+    };
+
+    ref_functions_t g_gl_functions;
 } // namespace
 
 qboolean R_Init_Wombat(qboolean total)
 {
-    LOGME();
+    if (!g_gl_functions.R_Init(total))
+        return qfalse;
 
-	registration_sequence = 1;
 
-	if (!VID_Init(GAPI_VULKAN)) {
-		Com_Error(ERR_FATAL, "VID_Init failed\n");
-		return qfalse;
+    auto *win = SDL_GL_GetCurrentWindow();
+    auto *context = SDL_GL_GetCurrentContext();
 
-	}
+    assert(win == sdl_window);
 
-    IMG_Init();
 
     g_iface = std::shared_ptr<wat::iface>(
-        wat::create({false}),
+        wat::create({false, false}),
         wat::destroy
     );
 
     SDL_SysWMinfo wmInfo;
 
     SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(sdl_window, &wmInfo);
+    SDL_GetWindowWMInfo(win, &wmInfo);
     HWND const hwnd = wmInfo.info.win.window;
+
+    //SDL_GL_MakeCurrent(nullptr, nullptr);
 
     g_iface->init({
         hwnd,
@@ -73,6 +116,8 @@ qboolean R_Init_Wombat(qboolean total)
     });
 
     g_valid_fbo = false;
+
+    //SDL_GL_MakeCurrent(win, context);
 
     return qtrue;
 }
@@ -94,6 +139,7 @@ void R_RenderFrame_Wombat(refdef_t *fd)
         g_valid_fbo = true;
     }
 
+
     wombat_android_test::update_args_t update_args;
 
     float matrix[16] = {
@@ -103,42 +149,7 @@ void R_RenderFrame_Wombat(refdef_t *fd)
         0, 0, 0, 1,
     };
 
-    {
-        vec3_t viewaxis[3];
-
-        AnglesToAxis(fd->viewangles, viewaxis);
-
-        {
-            size_t constexpr i = 1;
-            matrix[0] = -viewaxis[i][0];
-            matrix[4] = -viewaxis[i][1];
-            matrix[8] = -viewaxis[i][2];
-            matrix[12] = 0;//DotProduct(viewaxis[i], fd->vieworg);
-        }
-
-        {
-            size_t constexpr i = 2;
-
-            matrix[1] = viewaxis[i][0];
-            matrix[5] = viewaxis[i][1];
-            matrix[9] = viewaxis[i][2];
-            matrix[13] = 0;//-DotProduct(viewaxis[i], fd->vieworg);
-        }
-
-        {
-            size_t constexpr i = 0;
-
-            matrix[2] = -viewaxis[i][0];
-            matrix[6] = -viewaxis[i][1];
-            matrix[10] = -viewaxis[i][2];
-            matrix[14] = 0;//DotProduct(viewaxis[i], fd->vieworg);
-        }
-
-        matrix[3] = 0;
-        matrix[7] = 0;
-        matrix[11] = 0;
-        matrix[15] = 1;
-    }
+    ref_wombat_internal::fill_view_matrix(fd->vieworg, fd->viewangles, matrix);
     
     update_args.head_matrix = matrix;
     update_args.time_delta = 0;
@@ -208,6 +219,8 @@ void R_EndFrame_Wombat(void) {
 }
 void R_ModeChanged_Wombat(int width, int height, int flags, int rowbytes, void *pixels)
 { 
+    g_gl_functions.R_ModeChanged(width, height, flags, rowbytes, pixels);
+
     g_valid_fbo = false;
     g_fbo_width = width;
     g_fbo_height = height;
@@ -243,35 +256,71 @@ void MOD_Reference_Wombat(model_t *model) {}
 
 void R_RegisterFunctionsWombat()
 {
-	R_Init = R_Init_Wombat;
-	R_Shutdown = R_Shutdown_Wombat;
-	R_BeginRegistration = R_BeginRegistration_Wombat;
-	R_EndRegistration = R_EndRegistration_Wombat;
-	R_SetSky = R_SetSky_Wombat;
+    R_RegisterFunctionsGL();
+
+    g_gl_functions.R_Init = R_Init;
+	g_gl_functions.R_Shutdown = R_Shutdown;
+	g_gl_functions.R_BeginRegistration = R_BeginRegistration;
+	g_gl_functions.R_EndRegistration = R_EndRegistration;
+	g_gl_functions.R_SetSky = R_SetSky;
+	g_gl_functions.R_RenderFrame = R_RenderFrame;
+	g_gl_functions.R_LightPoint = R_LightPoint;
+	g_gl_functions.R_ClearColor = R_ClearColor;
+	g_gl_functions.R_SetAlpha = R_SetAlpha;
+	g_gl_functions.R_SetAlphaScale = R_SetAlphaScale;
+	g_gl_functions.R_SetColor = R_SetColor;
+	g_gl_functions.R_SetClipRect = R_SetClipRect;
+	g_gl_functions.R_SetScale = R_SetScale;
+	g_gl_functions.R_DrawChar = R_DrawChar;
+	g_gl_functions.R_DrawString = R_DrawString;
+	g_gl_functions.R_DrawPic = R_DrawPic;
+	g_gl_functions.R_DrawStretchPic = R_DrawStretchPic;
+	g_gl_functions.R_TileClear = R_TileClear;
+	g_gl_functions.R_DrawFill8 = R_DrawFill8;
+	g_gl_functions.R_DrawFill32 = R_DrawFill32;
+	g_gl_functions.R_BeginFrame = R_BeginFrame;
+	g_gl_functions.R_EndFrame = R_EndFrame;
+	g_gl_functions.R_ModeChanged = R_ModeChanged;
+	g_gl_functions.R_AddDecal = R_AddDecal;
+	g_gl_functions.R_InterceptKey = R_InterceptKey;
+	g_gl_functions.IMG_Load = IMG_Load;
+	g_gl_functions.IMG_Unload = IMG_Unload;
+	g_gl_functions.IMG_ReadPixels = IMG_ReadPixels;
+	g_gl_functions.MOD_LoadMD2 = MOD_LoadMD2;
+	g_gl_functions.MOD_LoadMD3 = MOD_LoadMD3;
+	g_gl_functions.MOD_Reference = MOD_Reference;    
+
+
+
+    R_Init = R_Init_Wombat;
+	// R_Shutdown = R_Shutdown_Wombat;
+	// R_BeginRegistration = R_BeginRegistration_Wombat;
+	// R_EndRegistration = R_EndRegistration_Wombat;
+	// R_SetSky = R_SetSky_Wombat;
 	R_RenderFrame = R_RenderFrame_Wombat;
-	R_LightPoint = R_LightPoint_Wombat;
-	R_ClearColor = R_ClearColor_Wombat;
-	R_SetAlpha = R_SetAlpha_Wombat;
-	R_SetAlphaScale = R_SetAlphaScale_Wombat;
-	R_SetColor = R_SetColor_Wombat;
-	R_SetClipRect = R_SetClipRect_Wombat;
-	R_SetScale = R_SetScale_Wombat;
-	R_DrawChar = R_DrawChar_Wombat;
-	R_DrawString = R_DrawString_Wombat;
-	R_DrawPic = R_DrawPic_Wombat;
-	R_DrawStretchPic = R_DrawStretchPic_Wombat;
-	R_TileClear = R_TileClear_Wombat;
-	R_DrawFill8 = R_DrawFill8_Wombat;
-	R_DrawFill32 = R_DrawFill32_Wombat;
-	R_BeginFrame = R_BeginFrame_Wombat;
-	R_EndFrame = R_EndFrame_Wombat;
+	// R_LightPoint = R_LightPoint_Wombat;
+	// R_ClearColor = R_ClearColor_Wombat;
+	// R_SetAlpha = R_SetAlpha_Wombat;
+	// R_SetAlphaScale = R_SetAlphaScale_Wombat;
+	// R_SetColor = R_SetColor_Wombat;
+	// R_SetClipRect = R_SetClipRect_Wombat;
+	// R_SetScale = R_SetScale_Wombat;
+	// R_DrawChar = R_DrawChar_Wombat;
+	// R_DrawString = R_DrawString_Wombat;
+	// R_DrawPic = R_DrawPic_Wombat;
+	// R_DrawStretchPic = R_DrawStretchPic_Wombat;
+	// R_TileClear = R_TileClear_Wombat;
+	// R_DrawFill8 = R_DrawFill8_Wombat;
+	// R_DrawFill32 = R_DrawFill32_Wombat;
+	// R_BeginFrame = R_BeginFrame_Wombat;
+	// R_EndFrame = R_EndFrame_Wombat;
 	R_ModeChanged = R_ModeChanged_Wombat;
-	R_AddDecal = R_AddDecal_Wombat;
-	R_InterceptKey = R_InterceptKey_Wombat;
-	IMG_Load = IMG_Load_Wombat;
-	IMG_Unload = IMG_Unload_Wombat;
-	IMG_ReadPixels = IMG_ReadPixels_Wombat;
-	MOD_LoadMD2 = MOD_LoadMD2_Wombat;
-	MOD_LoadMD3 = MOD_LoadMD3_Wombat;
-	MOD_Reference = MOD_Reference_Wombat;    
+	// R_AddDecal = R_AddDecal_Wombat;
+	// R_InterceptKey = R_InterceptKey_Wombat;
+	// IMG_Load = IMG_Load_Wombat;
+	// IMG_Unload = IMG_Unload_Wombat;
+	// IMG_ReadPixels = IMG_ReadPixels_Wombat;
+	// MOD_LoadMD2 = MOD_LoadMD2_Wombat;
+	// MOD_LoadMD3 = MOD_LoadMD3_Wombat;
+	// MOD_Reference = MOD_Reference_Wombat;    
 }
