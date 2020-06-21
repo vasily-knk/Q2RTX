@@ -478,7 +478,7 @@ collect_surfaces(int *idx_ctr, bsp_mesh_t *wm, bsp_t *bsp, int model_idx, int (*
 		if (MAT_IsKind(material_id, MATERIAL_KIND_GLASS) && !(surf_flags & SURF_TRANS_MASK))
 			material_id = MAT_SetKind(material_id, MATERIAL_KIND_REGULAR);
 
-		if ((surf_flags & SURF_NODRAW) && cvar_pt_enable_nodraw->integer)
+		if ((surf_flags & SURF_NODRAW) && (!cvar_pt_enable_nodraw || cvar_pt_enable_nodraw->integer))
 			continue;
 
 		// custom transparent surfaces
@@ -1049,7 +1049,7 @@ collect_sky_and_lava_ligth_polys(bsp_mesh_t *wm, bsp_t* bsp)
 
 			light.cluster = BSP_PointLeaf(bsp->nodes, light.off_center)->cluster;
 			
-			if (is_sky_or_lava_cluster(wm, surf, light.cluster, surf->texinfo->material->flags))
+			if (surf->texinfo && surf->texinfo->material && is_sky_or_lava_cluster(wm, surf, light.cluster, surf->texinfo->material->flags))
 			{
 				light_poly_t* list_light = append_light_poly(&wm->num_light_polys, &wm->allocated_light_polys, &wm->light_polys);
 				memcpy(list_light, &light, sizeof(light_poly_t));
@@ -1775,6 +1775,34 @@ bsp_mesh_destroy(bsp_mesh_t *wm)
 	Z_Free(wm->cluster_aabbs);
 
 	memset(wm, 0, sizeof(*wm));
+}
+
+vec3_t *extract_bsp_mesh_vertices(bsp_t *bsp, const char* map_name, int *out_num_verts)
+{
+    bsp_mesh_t wm;
+    bsp_mesh_create_from_bsp(&wm, bsp, map_name);
+
+    int num_world_vets = wm.num_vertices;
+
+    for (int i = 0; i < wm.num_models; ++i)
+    {
+        uint32_t new_val = wm.models[i].idx_offset;
+        if (new_val < num_world_vets)
+            num_world_vets = new_val;
+    }
+
+    if (out_num_verts)
+        *out_num_verts = num_world_vets;
+
+    unsigned int size_bytes = num_world_vets * sizeof(vec3_t);
+
+    vec_t *dst = Z_Malloc(size_bytes);
+    memcpy(dst, wm.positions, size_bytes);
+
+    bsp_mesh_destroy(&wm);
+
+
+    return dst;
 }
 
 void

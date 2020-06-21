@@ -962,3 +962,7 @@ void GL_LoadWorld(const char *name)
     GL_ShowErrors(__func__);
 }
 
+bsp_t *GL_GetBSP()
+{
+    return gl_static.world.cache;
+}
