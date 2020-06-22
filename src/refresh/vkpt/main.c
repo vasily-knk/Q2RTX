@@ -3051,7 +3051,7 @@ R_EndFrame_RTX(void)
 		qvk.device_count, signal_semaphores, signal_device_indices,
 		qvk.fences_frame_sync[qvk.current_frame_index]);
 
-    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], qvk.extent.width, qvk.extent.height, qvk.fences_frame_sync[qvk.current_frame_index]);
+    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], qvk.extent_render.width, qvk.extent_render.height, qvk.fences_frame_sync[qvk.current_frame_index]);
 
 
 
