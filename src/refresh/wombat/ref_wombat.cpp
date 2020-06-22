@@ -36,8 +36,6 @@ extern "C"
 
 }
 
-__pragma(comment(lib, "wombat_android_test.lib"))
-
 #define LOGME() // log_stream << __FUNCTION__ << std::endl;
 
 namespace
@@ -95,6 +93,8 @@ namespace
         num_modes,
     };
 
+    HMODULE g_wat_dll = nullptr;
+
 
     std::shared_ptr<wat::iface> g_iface;
 
@@ -120,6 +120,7 @@ namespace
         g_ref_mode = ref_mode_e(i);
     }
 
+
 } // namespace
 
 qboolean R_Init_Wombat(qboolean total)
@@ -136,11 +137,30 @@ qboolean R_Init_Wombat(qboolean total)
 
     assert(win == sdl_window);
 
+    {
+        char const *dll_name = "wombat_android_test.dll";
 
-    g_iface = std::shared_ptr<wat::iface>(
-        wat::create({wat::head_axis_e::wombat}),
-        wat::destroy
-    );
+        g_wat_dll = LoadLibraryA(dll_name);
+        if (!g_wat_dll)
+        {
+            Com_Error(ERR_FATAL, "Can't load '%s'", dll_name);
+            g_gl_functions.R_Shutdown(total);
+
+            return qfalse;
+        }
+
+        auto create_f = reinterpret_cast<wat::create_pfn>(GetProcAddress(g_wat_dll, "create"));
+        auto destroy_f = reinterpret_cast<wat::destroy_pfn>(GetProcAddress(g_wat_dll, "destroy"));
+
+
+        g_iface = std::shared_ptr<wat::iface>(
+            create_f({wat::head_axis_e::wombat}),
+            destroy_f
+        );
+
+    }
+
+
 
     SDL_SysWMinfo wmInfo;
 
@@ -168,6 +188,9 @@ qboolean R_Init_Wombat(qboolean total)
 void R_Shutdown_Wombat(qboolean total)
 {
     g_iface.reset();
+
+    if (g_wat_dll)
+        FreeLibrary(g_wat_dll);
 
 	Cmd_RemoveCommand("switch_ref_mode");
 
