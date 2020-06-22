@@ -120,7 +120,7 @@ struct streaming_stuff
             assert(ok);
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     void set_matrices(float const *vieworg, float const *viewangles, float const *proj)
