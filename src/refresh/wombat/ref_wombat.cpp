@@ -85,6 +85,17 @@ namespace
         void(*MOD_Reference)(model_t *model) = NULL;        
     };
 
+    enum struct ref_mode_e
+    {
+        wombat,
+        gl,
+        wombat_only,
+
+
+        num_modes,
+    };
+
+
     std::shared_ptr<wat::iface> g_iface;
 
     bool g_valid_fbo = false;
@@ -95,7 +106,19 @@ namespace
 
     std::vector<ref_wombat_internal::vec3_t> g_bsp_verts;
 
+    ref_mode_e g_ref_mode = ref_mode_e::wombat;
 
+    void switch_ref_mode()
+    {
+        auto constexpr num = size_t(ref_mode_e::num_modes);
+
+        auto i = size_t(g_ref_mode);
+
+        ++i;
+        i %= num;
+
+        g_ref_mode = ref_mode_e(i);
+    }
 
 } // namespace
 
@@ -103,6 +126,9 @@ qboolean R_Init_Wombat(qboolean total)
 {
     if (!g_gl_functions.R_Init(total))
         return qfalse;
+
+    Cmd_AddCommand("switch_ref_mode", (xcommand_t)&switch_ref_mode);
+
 
 
     auto *win = SDL_GL_GetCurrentWindow();
@@ -112,7 +138,7 @@ qboolean R_Init_Wombat(qboolean total)
 
 
     g_iface = std::shared_ptr<wat::iface>(
-        wat::create({false, true, false}),
+        wat::create({wat::head_axis_e::wombat}),
         wat::destroy
     );
 
@@ -143,6 +169,8 @@ void R_Shutdown_Wombat(qboolean total)
 {
     g_iface.reset();
 
+	Cmd_RemoveCommand("switch_ref_mode");
+
     g_gl_functions.R_Shutdown(total);
 }
 
@@ -164,8 +192,14 @@ void R_BeginRegistration_Wombat(const char *map)
 
 void R_SetSky_Wombat(const char *name, float rotate, vec3_t axis) { LOGME(); }
 void R_EndRegistration_Wombat(void) { LOGME(); }
+
 void R_RenderFrame_Wombat(refdef_t *fd)
 {
+    if (g_ref_mode == ref_mode_e::gl)
+    {
+        return g_gl_functions.R_RenderFrame(fd);
+    }
+
     if (!g_valid_fbo)
     {
         g_iface->invalidate_fbo(g_fbo_width, g_fbo_height);
@@ -220,7 +254,7 @@ void R_RenderFrame_Wombat(refdef_t *fd)
     render_args.passes = &pass_args;
 
     g_iface->render(render_args);
-    g_iface->swap_buffers();
+    g_iface->swap_buffers(g_ref_mode == ref_mode_e::wombat_only);
 }
 
 void R_LightPoint_Wombat(vec3_t origin, vec3_t light) { LOGME(); }
@@ -248,6 +282,9 @@ void R_BeginFrame_Wombat(void)
 
 }
 void R_EndFrame_Wombat(void) {
+
+    if (g_ref_mode != ref_mode_e::wombat_only)
+        g_gl_functions.R_EndFrame();
 
 }
 void R_ModeChanged_Wombat(int width, int height, int flags, int rowbytes, void *pixels)
@@ -344,7 +381,7 @@ void R_RegisterFunctionsWombat()
 	// R_DrawFill8 = R_DrawFill8_Wombat;
 	// R_DrawFill32 = R_DrawFill32_Wombat;
 	// R_BeginFrame = R_BeginFrame_Wombat;
-	// R_EndFrame = R_EndFrame_Wombat;
+	R_EndFrame = R_EndFrame_Wombat;
 	R_ModeChanged = R_ModeChanged_Wombat;
 	// R_AddDecal = R_AddDecal_Wombat;
 	// R_InterceptKey = R_InterceptKey_Wombat;
