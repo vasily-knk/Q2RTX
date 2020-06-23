@@ -2983,7 +2983,10 @@ retry:;
 
 int streaming_stuff_check_fence(void *fence)
 {
-	VkFence fence_cast = (VkFence)fence;
+    if (!fence)
+        return VK_SUCCESS;
+
+    VkFence fence_cast = (VkFence)fence;
     
     VkResult res_fence = vkWaitForFences(qvk.device, 1, &fence_cast, VK_TRUE, 0);
 
@@ -3051,7 +3054,7 @@ R_EndFrame_RTX(void)
 		qvk.device_count, signal_semaphores, signal_device_indices,
 		qvk.fences_frame_sync[qvk.current_frame_index]);
 
-    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], qvk.extent_render.width, qvk.extent_render.height, qvk.fences_frame_sync[qvk.current_frame_index]);
+    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], 1, qvk.extent_render.width, qvk.extent_render.height, qvk.fences_frame_sync[qvk.current_frame_index]);
 
 
 
@@ -3281,7 +3284,6 @@ R_Init_RTX(qboolean total)
 #if CL_RTX_SHADERBALLS
 	Cmd_AddCommand("drop_balls", (xcommand_t)&vkpt_drop_shaderballs);
 #endif
-	Cmd_AddCommand("st", (xcommand_t)&vkpt_st);
 
 	for (int i = 0; i < 256; i++) {
 		qvk.sintab[i] = sinf(i * (2 * M_PI / 255));
