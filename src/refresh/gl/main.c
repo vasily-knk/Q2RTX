@@ -80,6 +80,9 @@ cvar_t *gl_vertexlight;
 cvar_t *gl_polyblend;
 cvar_t *gl_showerrors;
 
+extern cvar_t *vid_streaming;
+
+
 // ==============================================================================
 
 static void GL_SetupFrustum(void)
@@ -1053,7 +1056,7 @@ qboolean R_Init_GL(qboolean total)
 
     Com_Printf("----------------------\n");
 
-    streaming_stuff_init();
+    streaming_stuff_init(vid_streaming->integer);
 
 
     return qtrue;

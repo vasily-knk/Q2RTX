@@ -68,6 +68,7 @@ cvar_t *cvar_drs_gain = NULL;
 extern cvar_t *scr_viewsize;
 extern cvar_t *cvar_bloom_enable;
 extern cvar_t* cvar_flt_taa;
+extern cvar_t *vid_streaming;
 static int drs_current_scale = 0;
 static int drs_effective_scale = 0;
 
@@ -3295,7 +3296,7 @@ R_Init_RTX(qboolean total)
 		taa_samples[i][1] = halton(3, i + 1) - 0.5f;
 	}
 
-    streaming_stuff_init();
+    streaming_stuff_init(vid_streaming->integer);
 
 	return qtrue;
 }

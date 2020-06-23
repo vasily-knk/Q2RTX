@@ -212,29 +212,34 @@ std::unique_ptr<streaming_stuff> g_streaming_stuff;
 
 void streaming_stuff_dump_bsp_mesh(float const *verts, int num_verts, char const *map_name)
 {
-    std::string const obj_name = std::string(map_name) + ".obj";
-        
-    std::ofstream s(obj_name);
-
-    s << std::fixed << std::setprecision(6);
-    for (size_t i = 0; i < num_verts; ++i)
+    if (false)
     {
-        auto const *p = verts + i * 3;
-        s << "v " << p[0] << " " << p[1] << " " << p[2] << "\n";
+        std::string const obj_name = std::string(map_name) + ".obj";
+        
+        std::ofstream s(obj_name);
+
+        s << std::fixed << std::setprecision(6);
+        for (size_t i = 0; i < num_verts; ++i)
+        {
+            auto const *p = verts + i * 3;
+            s << "v " << p[0] << " " << p[1] << " " << p[2] << "\n";
+        }
+
+        s << std::endl;
+
+        for (size_t i = 0; i < num_verts / 3; ++i)
+            s << "f " << i * 3 + 1 << " " << i * 3 + 2 << " " << i * 3 + 3 << "\n";
+
     }
-
-    s << std::endl;
-
-    for (size_t i = 0; i < num_verts / 3; ++i)
-        s << "f " << i * 3 + 1 << " " << i * 3 + 2 << " " << i * 3 + 3 << "\n";        
 
     if (g_streaming_stuff)
         g_streaming_stuff->dump_bsp_mesh(verts, num_verts, map_name);
 }
 
-void streaming_stuff_init()
+void streaming_stuff_init(int enabled)
 {
-    g_streaming_stuff = std::make_unique<streaming_stuff>();
+    if (enabled)
+        g_streaming_stuff = std::make_unique<streaming_stuff>();
 }
 
 void streaming_stuff_send_frame(void *vk_image, int rtx, unsigned width, unsigned height, void *fence)
