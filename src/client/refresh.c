@@ -28,6 +28,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 // Console variables that we need to access from this module
 cvar_t      *vid_rtx;
+cvar_t      *vid_wombat;
 cvar_t      *vid_geometry;
 cvar_t      *vid_modelist;
 cvar_t      *vid_fullscreen;
@@ -314,6 +315,8 @@ void CL_InitRefresh(void)
 #endif
 		CVAR_REFRESH | CVAR_ARCHIVE);
 
+    vid_wombat = Cvar_Get("vid_wombat", "0", CVAR_REFRESH | CVAR_ARCHIVE);
+
     vid_fullscreen = Cvar_Get("vid_fullscreen", "0", CVAR_ARCHIVE);
     _vid_fullscreen = Cvar_Get("_vid_fullscreen", "1", CVAR_ARCHIVE);
     vid_modelist = Cvar_Get("vid_modelist", modelist, 0);
@@ -332,10 +335,10 @@ void CL_InitRefresh(void)
 #if REF_GL && REF_VKPT
 	if (vid_rtx->integer)
 		R_RegisterFunctionsRTX();
-	else if (0)
-		R_RegisterFunctionsGL();
-    else
+	else if (vid_wombat->integer)
         R_RegisterFunctionsWombat();
+    else
+		R_RegisterFunctionsGL();
 
 #elif REF_GL
 	R_RegisterFunctionsGL();

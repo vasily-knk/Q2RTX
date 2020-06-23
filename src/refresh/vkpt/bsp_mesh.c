@@ -1796,7 +1796,7 @@ vec3_t *extract_bsp_mesh_vertices(bsp_t *bsp, const char* map_name, int *out_num
 
     unsigned int size_bytes = num_world_vets * sizeof(vec3_t);
 
-    vec_t *dst = Z_Malloc(size_bytes);
+    vec3_t *dst = Z_Malloc(size_bytes);
     memcpy(dst, wm.positions, size_bytes);
 
     bsp_mesh_destroy(&wm);
