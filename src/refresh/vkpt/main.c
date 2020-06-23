@@ -67,6 +67,7 @@ cvar_t *cvar_drs_adjust_down = NULL;
 cvar_t *cvar_drs_gain = NULL;
 extern cvar_t *scr_viewsize;
 extern cvar_t *cvar_bloom_enable;
+extern cvar_t *vid_streaming;
 static int drs_current_scale = 0;
 static int drs_effective_scale = 0;
 
@@ -3029,7 +3030,7 @@ R_Init_RTX(qboolean total)
 		qvk.sintab[i] = sinf(i * (2 * M_PI / 255));
 	}
 
-    streaming_stuff_init();
+    streaming_stuff_init(vid_streaming->integer);
 
 	return qtrue;
 }
