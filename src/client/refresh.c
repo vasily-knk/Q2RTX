@@ -289,6 +289,9 @@ static void vid_modelist_changed(cvar_t *self)
 CL_InitRefresh
 ============
 */
+
+void vkpt_st();
+
 void CL_InitRefresh(void)
 {
     char *modelist;
@@ -333,6 +336,9 @@ void CL_InitRefresh(void)
     }
 
     Com_SetLastError(NULL);
+
+    Cmd_AddCommand("st", (xcommand_t)&vkpt_st);
+
 
 #if REF_GL && REF_VKPT
 	if (vid_rtx->integer)

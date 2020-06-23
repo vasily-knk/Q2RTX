@@ -19,6 +19,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "gl.h"
 #include "arbfp.h"
 
+#include "../vkpt/streaming_stuff.h"
+
 glState_t gls;
 
 // for uploading
@@ -279,7 +281,7 @@ void GL_Setup2D(void)
     qglLoadIdentity();
 }
 
-static void GL_Frustum(void)
+static void GL_Frustum(GLfloat *out_matrix)
 {
     GLfloat xmin, xmax, ymin, ymax, zfar, znear;
     GLfloat width, height, depth;
@@ -324,6 +326,9 @@ static void GL_Frustum(void)
 
     qglMatrixMode(GL_PROJECTION);
     qglLoadMatrixf(matrix);
+
+    if (out_matrix)
+        memcpy(out_matrix, matrix, sizeof(matrix));
 }
 
 static void GL_RotateForViewer(void)
@@ -364,7 +369,9 @@ void GL_Setup3D(void)
     qglViewport(glr.fd.x, r_config.height - (glr.fd.y + glr.fd.height),
                 glr.fd.width, glr.fd.height);
 
-    GL_Frustum();
+    GLfloat projMatrix[16];
+    GL_Frustum(projMatrix);
+    streaming_stuff_set_matrices(glr.fd.vieworg, glr.fd.viewangles, projMatrix);
 
     GL_RotateForViewer();
 

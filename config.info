@@ -1,4 +1,4 @@
 path
 {
-    data "d:/work/simlabs-repo-vr/ext/data"
+    data "c:/work/simlabs-repo/ext/data"
 }

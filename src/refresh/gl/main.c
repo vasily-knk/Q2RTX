@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include "gl.h"
+#include "../vkpt/streaming_stuff.h"
 
 glRefdef_t glr;
 glStatic_t gl_static;
@@ -613,6 +614,9 @@ void R_RenderFrame_GL(refdef_t *fd)
 #endif
 
     GL_ShowErrors(__func__);
+
+    streaming_stuff_send_frame(NULL, 0, r_config.width, r_config.height, NULL);
+
 }
 
 void R_BeginFrame_GL(void)
@@ -1051,6 +1055,9 @@ qboolean R_Init_GL(qboolean total)
 
     Com_Printf("----------------------\n");
 
+    streaming_stuff_init();
+
+
     return qtrue;
 
 fail:
@@ -1067,6 +1074,8 @@ R_Shutdown
 */
 void R_Shutdown_GL(qboolean total)
 {
+    streaming_stuff_shutdown();
+
     Com_DPrintf("GL_Shutdown( %i )\n", total);
 
     GL_FreeWorld();
@@ -1102,6 +1111,9 @@ void R_Shutdown_GL(qboolean total)
 R_BeginRegistration
 ===============
 */
+vec3_t *extract_bsp_mesh_vertices(bsp_t *bsp, const char* map_name, int *out_num_verts);
+
+
 void R_BeginRegistration_GL(const char *name)
 {
     char fullname[MAX_QPATH];
@@ -1114,6 +1126,14 @@ void R_BeginRegistration_GL(const char *name)
 
     Q_concat(fullname, sizeof(fullname), "maps/", name, ".bsp", NULL);
     GL_LoadWorld(fullname);
+
+    auto *bsp = gl_static.world.cache;
+
+    int num_verts;
+    float *verts = (float*)(extract_bsp_mesh_vertices(bsp, name, &num_verts));
+
+    streaming_stuff_dump_bsp_mesh(verts, num_verts, name);
+    Z_Free(verts);
 }
 
 /*

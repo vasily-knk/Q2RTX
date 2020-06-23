@@ -96,7 +96,7 @@ struct streaming_stuff
         append_cmd(cmd);
     }
 
-    void send_frame(void *vk_image, unsigned width, unsigned height, void *fence)
+    void send_frame(void *vk_image, bool rtx, unsigned width, unsigned height, void *fence)
     {
         user_data_.check_fence = check_fence;
         user_data_.fence = fence;
@@ -109,13 +109,26 @@ struct streaming_stuff
 
         if (encoder_)
         {
-            bool const ok = encoder_->enqueue_frame(
-                webstream::input_video_frame(
-                width, 
-                height, 
-                webstream::video_format(webstream::video_format::pixel_format_t::Format_RGBA32), 
-                vk_image,
-                true), reinterpret_cast<uint8_t*>(os.data()), os.size());
+            webstream::input_video_frame frame = rtx
+                ?
+                    webstream::input_video_frame(
+                    width, 
+                    height, 
+                    webstream::video_format(webstream::video_format::pixel_format_t::Format_RGBA32), 
+                    vk_image,
+                    true)
+                :
+                    webstream::input_video_frame(
+                    width, 
+                    height, 
+                    webstream::video_format(webstream::video_format::pixel_format_t::Format_RGBA32), 
+                    uint32_t(vk_image),
+                    true)
+            ;
+
+
+
+            bool const ok = encoder_->enqueue_frame(frame, reinterpret_cast<uint8_t*>(os.data()), os.size());
 
             assert(ok);
         }
@@ -139,10 +152,10 @@ struct streaming_stuff
 
         
         // todo: fact hack, may break any minute!
-        for (float &v : sp.proj)
-            v *= -1.f;
+        //for (float &v : sp.proj)
+        //    v *= -1.f;
 
-        sp.proj[0] *= -1.f;
+        //sp.proj[0] *= -1.f;
     }
 
     void send_text(char const *text)
@@ -215,7 +228,8 @@ void streaming_stuff_dump_bsp_mesh(float const *verts, int num_verts, char const
     for (size_t i = 0; i < num_verts / 3; ++i)
         s << "f " << i * 3 + 1 << " " << i * 3 + 2 << " " << i * 3 + 3 << "\n";        
 
-    g_streaming_stuff->dump_bsp_mesh(verts, num_verts, map_name);
+    if (g_streaming_stuff)
+        g_streaming_stuff->dump_bsp_mesh(verts, num_verts, map_name);
 }
 
 void streaming_stuff_init()
@@ -223,9 +237,10 @@ void streaming_stuff_init()
     g_streaming_stuff = std::make_unique<streaming_stuff>();
 }
 
-void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height, void *fence)
+void streaming_stuff_send_frame(void *vk_image, int rtx, unsigned width, unsigned height, void *fence)
 {
-    g_streaming_stuff->send_frame(vk_image, width, height, fence);
+    if (g_streaming_stuff)
+        g_streaming_stuff->send_frame(vk_image, rtx, width, height, fence);
 }
 
 void streaming_stuff_shutdown()
@@ -235,12 +250,14 @@ void streaming_stuff_shutdown()
 
 void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, float const *proj)
 {
-    g_streaming_stuff->set_matrices(vieworg, viewangles, proj);
+    if (g_streaming_stuff)
+        g_streaming_stuff->set_matrices(vieworg, viewangles, proj);
 }
 
 void streaming_stuff_send_text(char const *text)
 {
-    g_streaming_stuff->send_text(text);
+    if (g_streaming_stuff)
+        g_streaming_stuff->send_text(text);
 }
 
 
