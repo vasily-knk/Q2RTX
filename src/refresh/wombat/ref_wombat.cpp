@@ -97,6 +97,7 @@ namespace
 
 
     std::shared_ptr<wat::iface> g_iface;
+    ref_wombat_internal_uptr g_internal;
 
     bool g_valid_fbo = false;
     uint32_t g_fbo_width = 0;
@@ -121,6 +122,13 @@ namespace
     }
 
 
+    void send_frame()
+    {
+        if (g_internal)
+            g_internal->send_frame();
+    }
+
+
 } // namespace
 
 qboolean R_Init_Wombat(qboolean total)
@@ -129,6 +137,7 @@ qboolean R_Init_Wombat(qboolean total)
         return qfalse;
 
     Cmd_AddCommand("switch_ref_mode", (xcommand_t)&switch_ref_mode);
+    Cmd_AddCommand("send_frame", (xcommand_t)&send_frame);
 
 
 
@@ -154,11 +163,14 @@ qboolean R_Init_Wombat(qboolean total)
 
 
         g_iface = std::shared_ptr<wat::iface>(
-            create_f({wat::head_axis_e::wombat}),
+            create_f({wat::head_axis_e::wombat, false}),
             destroy_f
         );
 
     }
+
+    if (g_iface)
+        g_internal = create_ref_wombat_internal(g_iface);
 
 
 
@@ -187,12 +199,14 @@ qboolean R_Init_Wombat(qboolean total)
 
 void R_Shutdown_Wombat(qboolean total)
 {
+    g_internal.reset();
     g_iface.reset();
 
     if (g_wat_dll)
         FreeLibrary(g_wat_dll);
 
-	Cmd_RemoveCommand("switch_ref_mode");
+    Cmd_RemoveCommand("switch_ref_mode");
+    Cmd_RemoveCommand("send_frame");
 
     g_gl_functions.R_Shutdown(total);
 }
@@ -205,9 +219,7 @@ void R_BeginRegistration_Wombat(const char *map)
 
     int num_verts;
     auto *verts = reinterpret_cast<ref_wombat_internal::vec3_t*>(extract_bsp_mesh_vertices(bsp, map, &num_verts));
-
-    ref_wombat_internal::dump_bsp_vertices(reinterpret_cast<float*>(verts), num_verts, g_iface.get());
-
+    g_internal->dump_bsp_vertices(reinterpret_cast<float*>(verts), num_verts);
 
     Z_Free(verts);
 
@@ -229,6 +241,7 @@ void R_RenderFrame_Wombat(refdef_t *fd)
         g_valid_fbo = true;
     }
 
+    g_internal->update_matrices(fd->vieworg, fd->viewangles, fd->fov_x, fd->fov_y);
 
     wombat_android_test::update_args_t update_args;
 
