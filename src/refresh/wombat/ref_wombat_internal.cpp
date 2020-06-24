@@ -48,35 +48,30 @@ namespace geom
 #include "vr_streaming/cmds.h"
 
 
-namespace ref_wombat_internal
-{
-void fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix)
-{
-    geom::cprf const orien(90.f - viewangles[1], -viewangles[0], viewangles[2]);
-    geom::point_3f const pos(vieworg[0], vieworg[1], vieworg[2]);
-
-    geom::transform_4f const tr(geom::as_translation(pos), orien);
-
-    auto const &m = tr.inverse_matrix();
-
-    memcpy(dst_matrix, m.rawdata(), 16 * sizeof(float));
-}
-
-
-void dump_bsp_vertices(float const *verts, size_t num_verts, wombat_android_test::iface *iface)
+namespace
 {
 
-    binary::output_stream os;
+} // namespace
 
+struct ref_wombat_internal_impl
+    : ref_wombat_internal
+{
+    using iface_ptr = std::shared_ptr<wombat_android_test::iface>;
+
+    explicit ref_wombat_internal_impl(iface_ptr iface)
+        : iface_(iface)
+        , scene_params_()
     {
-        vr_streaming::user_data_t user_data;
-        binary::write(os, user_data);
+        
     }
 
 
-    binary::write(os, uint32_t(1));
-
+    void dump_bsp_vertices(float const* verts, size_t num_verts) override
     {
+        auto os = begin_frame_data();
+
+        binary::write(os, uint32_t(1));
+
         binary::bytes_t cmd_bytes;
         {
             vr_streaming::cmd_mesh_t cmd;
@@ -89,18 +84,110 @@ void dump_bsp_vertices(float const *verts, size_t num_verts, wombat_android_test
         }
 
         binary::write(os, cmd_bytes);
+
+        end_frame_data(os);
     }
 
+    void update_matrices(float const* vieworg, float const* viewangles, float fovx, float fovy) override
+    {
+        auto &sp = scene_params_;
 
+        geom::cprf const orien(90.f - viewangles[1], -viewangles[0], viewangles[2]);
 
-    wombat_android_test::frame_data_t data = {
-        vr_streaming::frame_t(),
-        reinterpret_cast<uint8_t*>(os.data()),
-        uint32_t(os.size())
-    };
+        sp.state.orien = geom::quaternionf(orien);
+        sp.state.global_pos = geom::point_3(vieworg[0], vieworg[1], vieworg[2]);
+        sp.desired_orien = sp.state.orien;
 
-    iface->enqueue_frame(data);
+        {
+            auto &matrix = sp.proj;
+
+            float const znear = 2.;
+
+            float const zfar = 2048;
+
+            float const ymax = znear * tan(fovy * geom::pi / 360.0);
+            float const ymin = -ymax;
+
+            float const xmax = znear * tan(fovx * geom::pi / 360.0);
+            float const xmin = -xmax;
+
+            float const width = xmax - xmin;
+            float const height = ymax - ymin;
+            float const depth = zfar - znear;
+
+            matrix[0] = 2 * znear / width;
+            matrix[4] = 0;
+            matrix[8] = (xmax + xmin) / width;
+            matrix[12] = 0;
+
+            matrix[1] = 0;
+            matrix[5] = 2 * znear / height;
+            matrix[9] = (ymax + ymin) / height;
+            matrix[13] = 0;
+
+            matrix[2] = 0;
+            matrix[6] = 0;
+            matrix[10] = -(zfar + znear) / depth;
+            matrix[14] = -2 * zfar * znear / depth;
+
+            matrix[3] = 0;
+            matrix[7] = 0;
+            matrix[11] = -1;
+            matrix[15] = 0;
+        }
+    }
+
+    void send_frame() override
+    {
+        auto os = begin_frame_data();
+
+        end_frame_data(os);
+    }
+
+private:
+
+    binary::output_stream begin_frame_data()
+    {
+        binary::output_stream os;
+
+        vr_streaming::user_data_t user_data;
+        user_data.scene_params = scene_params_;
+        binary::write(os, user_data);
+
+        return os;
+        
+    }
+
+    void end_frame_data(binary::output_stream const &os)
+    {
+        wombat_android_test::frame_data_t data = {
+            vr_streaming::frame_t(),
+            reinterpret_cast<uint8_t const *>(os.data()),
+            uint32_t(os.size())
+        };
+
+        iface_->enqueue_frame(data);
+    }
+    
+private:
+    iface_ptr iface_;
+    vr_streaming::scene_params_t scene_params_;
+};
+
+void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix)
+{
+    geom::cprf const orien(90.f - viewangles[1], -viewangles[0], viewangles[2]);
+    geom::point_3f const pos(vieworg[0], vieworg[1], vieworg[2]);
+
+    geom::transform_4f const tr(geom::as_translation(pos), orien);
+
+    auto const &m = tr.inverse_matrix();
+
+    memcpy(dst_matrix, m.rawdata(), 16 * sizeof(float));
 }
 
-    
+
+ref_wombat_internal_uptr create_ref_wombat_internal(std::shared_ptr<wombat_android_test::iface> iface)
+{
+    return std::make_unique<ref_wombat_internal_impl>(iface);
 }
