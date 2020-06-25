@@ -144,6 +144,11 @@ struct ref_wombat_internal_impl
         end_frame_data(os);
     }
 
+    void update_resolution(unsigned width, unsigned height) override
+    {
+        resolution_ = geom::point_2ui(width, height);
+    }
+
 private:
 
     binary::output_stream begin_frame_data()
@@ -160,8 +165,13 @@ private:
 
     void end_frame_data(binary::output_stream const &os)
     {
-        wombat_android_test::frame_data_t data = {
-            vr_streaming::frame_t(),
+        vr_streaming::frame_t frame;
+
+        frame.width = resolution_.x;
+        frame.height = resolution_.y;
+
+        wombat_android_test::frame_data_t const data = {
+            frame,
             reinterpret_cast<uint8_t const *>(os.data()),
             uint32_t(os.size())
         };
@@ -172,6 +182,7 @@ private:
 private:
     iface_ptr iface_;
     vr_streaming::scene_params_t scene_params_;
+    geom::point_2ui resolution_;
 };
 
 void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix)

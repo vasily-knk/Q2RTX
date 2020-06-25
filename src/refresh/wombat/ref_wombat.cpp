@@ -172,6 +172,8 @@ qboolean R_Init_Wombat(qboolean total)
     if (g_iface)
         g_internal = create_ref_wombat_internal(g_iface);
 
+    if (g_internal)
+        g_internal->update_resolution(g_fbo_width, g_fbo_height);
 
 
     SDL_SysWMinfo wmInfo;
@@ -326,6 +328,9 @@ void R_EndFrame_Wombat(void) {
 void R_ModeChanged_Wombat(int width, int height, int flags, int rowbytes, void *pixels)
 { 
     g_gl_functions.R_ModeChanged(width, height, flags, rowbytes, pixels);
+
+    if (g_internal)
+        g_internal->update_resolution(uint32_t(width), uint32_t(height));
 
     g_valid_fbo = false;
     g_fbo_width = width;
