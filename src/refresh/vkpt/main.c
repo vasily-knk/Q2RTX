@@ -2291,7 +2291,7 @@ prepare_ubo(refdef_t *fd, mleaf_t* viewleaf, const reference_mode_t* ref_mode, c
 	inverse(V, ubo->invV);
 	inverse(P, ubo->invP);
 
-    streaming_stuff_set_matrices(fd->vieworg, fd->viewangles, P);
+    streaming_stuff_set_matrices(fd->vieworg, fd->viewangles, P, 1);
 
 	if (cvar_pt_projection->integer == 1 && render_world)
 	{
@@ -3055,7 +3055,7 @@ R_EndFrame_RTX(void)
 		qvk.device_count, signal_semaphores, signal_device_indices,
 		qvk.fences_frame_sync[qvk.current_frame_index]);
 
-    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], 1, qvk.extent_render.width, qvk.extent_render.height, qvk.fences_frame_sync[qvk.current_frame_index]);
+    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], qvk.extent_render.width, qvk.extent_render.height, qvk.fences_frame_sync[qvk.current_frame_index]);
 
 
 
@@ -3296,7 +3296,7 @@ R_Init_RTX(qboolean total)
 		taa_samples[i][1] = halton(3, i + 1) - 0.5f;
 	}
 
-    streaming_stuff_init(vid_streaming->integer);
+    streaming_stuff_init(vid_streaming->integer, 1);
 
 	return qtrue;
 }

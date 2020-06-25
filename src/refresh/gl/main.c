@@ -616,7 +616,7 @@ void R_RenderFrame_GL(refdef_t *fd)
 
     GL_ShowErrors(__func__);
 
-    streaming_stuff_send_frame(NULL, 0, r_config.width, r_config.height, NULL);
+    streaming_stuff_send_frame(NULL, r_config.width, r_config.height, NULL);
 
 }
 
@@ -1056,7 +1056,7 @@ qboolean R_Init_GL(qboolean total)
 
     Com_Printf("----------------------\n");
 
-    streaming_stuff_init(vid_streaming->integer);
+    streaming_stuff_init(vid_streaming->integer, 0);
 
 
     return qtrue;

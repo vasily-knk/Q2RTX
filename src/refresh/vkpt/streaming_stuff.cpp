@@ -60,7 +60,8 @@ int check_fence(void * fence)
 struct streaming_stuff
     : webstream::stream_server_callback
 {
-    streaming_stuff()
+    explicit streaming_stuff(bool rtx)
+        : rtx_(rtx)
     {
         webstream::ws_init_logging();
 
@@ -96,7 +97,7 @@ struct streaming_stuff
         append_cmd(cmd);
     }
 
-    void send_frame(void *vk_image, bool rtx, unsigned width, unsigned height, void *fence)
+    void send_frame(void *vk_image, unsigned width, unsigned height, void *fence)
     {
         user_data_.check_fence = check_fence;
         user_data_.fence = fence;
@@ -109,7 +110,7 @@ struct streaming_stuff
 
         if (encoder_)
         {
-            webstream::input_video_frame frame = rtx
+            webstream::input_video_frame frame = rtx_
                 ?
                     webstream::input_video_frame(
                     width, 
@@ -152,10 +153,14 @@ struct streaming_stuff
 
         
         // todo: fact hack, may break any minute!
-        //for (float &v : sp.proj)
-        //    v *= -1.f;
-
-        //sp.proj[0] *= -1.f;
+        //
+        if (rtx_)
+        {
+            for (float &v : sp.proj)
+                v *= -1.f;
+            
+            sp.proj[0] *= -1.f;
+        }
     }
 
     void send_text(char const *text)
@@ -197,6 +202,8 @@ private:
     }
 
 private:
+    bool rtx_;
+
     webstream::stream_server_ptr stream_server_;
     std::unique_ptr<webstream::stream_policy> stream_policy_;
     webstream::encoder_ptr encoder_;
@@ -236,16 +243,16 @@ void streaming_stuff_dump_bsp_mesh(float const *verts, int num_verts, char const
         g_streaming_stuff->dump_bsp_mesh(verts, num_verts, map_name);
 }
 
-void streaming_stuff_init(int enabled)
+void streaming_stuff_init(int enabled, int rtx)
 {
     if (enabled)
-        g_streaming_stuff = std::make_unique<streaming_stuff>();
+        g_streaming_stuff = std::make_unique<streaming_stuff>(rtx != 0);
 }
 
-void streaming_stuff_send_frame(void *vk_image, int rtx, unsigned width, unsigned height, void *fence)
+void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height, void *fence)
 {
     if (g_streaming_stuff)
-        g_streaming_stuff->send_frame(vk_image, rtx, width, height, fence);
+        g_streaming_stuff->send_frame(vk_image, width, height, fence);
 }
 
 void streaming_stuff_shutdown()
