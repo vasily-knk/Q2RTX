@@ -17,6 +17,8 @@ struct ref_wombat_internal
     virtual void update_matrices(float const *vieworg, float const *viewangles, float fovx, float fovy) = 0;
     virtual void send_frame() = 0;
 
+    virtual void update_resolution(unsigned width, unsigned height) = 0;
+
     static void fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix);
 
 };
