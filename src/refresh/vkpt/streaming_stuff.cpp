@@ -57,6 +57,52 @@ int check_fence(void * fence)
     return streaming_stuff_check_fence(fence);
 }
 
+webstream::stream_server_settings const &get_webstream_server_settings()
+{
+    static auto const val = []()
+    {
+        webstream::stream_server_settings s;
+
+        s.listen_port = 9002;
+
+        {
+            auto &as = s.adj_sett;
+
+            as.max_ping_value = 250;
+            as.max_stable_ping_value = 150;
+            as.bandwidth_averager_n = 30;
+            as.bandwidth_vote_n = 2;
+            as.ping_averager_size = 3;
+            as.min_bandwidth_data_size = 4194304;
+            as.bandwidth_check_interval = 4000;
+            as.optimistic_bitrate_portion = 1.2;
+            as.bitrate_reduction_portion = 0.7;
+            as.bitrate_counter_window = 1000;
+            as.encode_counter_window = 1000;
+            as.server_stat_sending_interval = 3000;
+            as.server_ping_request_interval = 1500;
+            as.min_fps_raw_delta = 1.0;
+            as.min_fps_mux_delta = 2.0;
+            as.frame_rate_adj_counter = 2;
+            as.frame_rate_low_portion = 0.85;
+            as.resolution_low_portion = 0.9;
+            as.high_ping_relax_number = 3;
+            as.ping_ratio_to_lower_bitrate = 5.0;
+            as.bitrate_lower_ratio = 0.85;
+            as.bitrate_raise_ratio = 1.5;
+            as.bandwidth_to_bitrate_portion = 0.8;
+            as.max_bitrate = 8388608;
+            as.min_bitrate = 786432;
+        }
+
+        s.muxer_settings.num_frames_in_blob = -1;
+
+        return s;
+    }();
+
+    return val;
+}
+
 struct streaming_stuff
     : webstream::stream_server_callback
 {
@@ -76,7 +122,7 @@ struct streaming_stuff
 
 
         stream_policy_ = std::make_unique<webstream::std_stream_policy>(policy);
-        stream_server_ = webstream::create_websocket_stream_server(webstream::stream_server_settings(), this);
+        stream_server_ = webstream::create_websocket_stream_server(get_webstream_server_settings(), this);
         stream_server_->set_stream_policy(stream_policy_.get());
         encoder_  = webstream::create_nvenc_encoder();
 
@@ -97,12 +143,16 @@ struct streaming_stuff
         append_cmd(cmd);
     }
 
-    void send_frame(void *vk_image, unsigned width, unsigned height, void *fence)
+    void send_frame(void *vk_image, unsigned width, unsigned height, unsigned full_width, unsigned full_height, void *fence)
     {
         user_data_.check_fence = check_fence;
         user_data_.fence = fence;
 
         binary::output_stream os;
+
+        user_data_.w_ratio = float(width) / float(full_width);
+        user_data_.h_ratio = float(height) / float(full_height);
+
         binary::write(os, user_data_);
 
         binary::write(os, cmd_bytes_);
@@ -129,7 +179,7 @@ struct streaming_stuff
 
 
 
-            bool const ok = encoder_->enqueue_frame(frame, reinterpret_cast<uint8_t*>(os.data()), os.size());
+            bool const ok = encoder_->enqueue_frame(frame, nullptr, 0);//reinterpret_cast<uint8_t*>(os.data()), os.size());
 
             assert(ok);
         }
@@ -156,7 +206,7 @@ struct streaming_stuff
         //
         if (rtx_)
         {
-            for (float &v : sp.proj)
+            for (float &v : sp.proj)                        
                 v *= -1.f;
             
             sp.proj[0] *= -1.f;
@@ -249,10 +299,10 @@ void streaming_stuff_init(int enabled, int rtx)
         g_streaming_stuff = std::make_unique<streaming_stuff>(rtx != 0);
 }
 
-void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height, void *fence)
+void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height, unsigned full_width, unsigned full_height, void *fence)
 {
     if (g_streaming_stuff)
-        g_streaming_stuff->send_frame(vk_image, width, height, fence);
+        g_streaming_stuff->send_frame(vk_image, width, height, full_width, full_height, fence);
 }
 
 void streaming_stuff_shutdown()

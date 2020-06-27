@@ -515,6 +515,10 @@ qboolean VID_Init(graphics_api_t api)
 			goto fail;
 		}
 
+        int major, minor;
+	    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
+	    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
+
 		cvar_t *cvar_vsync = Cvar_Get("vid_vsync", "0", CVAR_ARCHIVE);
 		cvar_vsync->changed = vsync_changed;
 		cvar_vsync->flags &= ~CVAR_REFRESH; // in case the RTX renderer has marked it as REFRESH

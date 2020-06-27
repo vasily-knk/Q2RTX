@@ -550,6 +550,9 @@ qboolean GL_ShowErrors(const char *func)
 
     do {
         if (gl_showerrors->integer) {
+
+            char aaaa[1024];
+            sprintf(aaaa, GL_ErrorString(err));
             Com_EPrintf("%s: %s\n", func, GL_ErrorString(err));
         }
     } while ((err = qglGetError()) != GL_NO_ERROR);
@@ -618,7 +621,7 @@ void R_RenderFrame_GL(refdef_t *fd)
 
     GL_ShowErrors(__func__);
 
-    streaming_stuff_send_frame(NULL, r_config.width, r_config.height, NULL);
+    streaming_stuff_send_frame((void*)(1), r_config.width, r_config.height, r_config.width, r_config.height, NULL);
 
 }
 
@@ -798,7 +801,7 @@ static void GL_Register(void)
     gl_vertexlight = Cvar_Get("gl_vertexlight", "0", 0);
     gl_vertexlight->changed = gl_lightmap_changed;
     gl_polyblend = Cvar_Get("gl_polyblend", "1", 0);
-    gl_showerrors = Cvar_Get("gl_showerrors", "1", 0);
+    //gl_showerrors = Cvar_Get("gl_showerrors", "1", 0);
 
     gl_lightmap_changed(NULL);
     gl_modulate_entities_changed(NULL);
@@ -818,6 +821,8 @@ static qboolean GL_SetupConfig(void)
     GLint integer;
     GLfloat value;
     char *p;
+
+    gl_showerrors = Cvar_Get("gl_showerrors", "1", 0);
 
     // get version string
     version = (const char *)qglGetString(GL_VERSION);
@@ -952,6 +957,7 @@ static qboolean GL_SetupConfig(void)
 
     qglGetIntegerv(GL_STENCIL_BITS, &integer);
     gl_config.stencilbits = integer;
+
 
     GL_ShowErrors(__func__);
     return qtrue;
@@ -1130,7 +1136,7 @@ void R_BeginRegistration_GL(const char *name)
     Q_concat(fullname, sizeof(fullname), "maps/", name, ".bsp", NULL);
     GL_LoadWorld(fullname);
 
-    auto *bsp = gl_static.world.cache;
+    bsp_t *bsp = gl_static.world.cache;
 
     int num_verts;
     float *verts = (float*)(extract_bsp_mesh_vertices(bsp, name, &num_verts));
