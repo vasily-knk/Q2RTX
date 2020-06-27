@@ -3170,7 +3170,7 @@ void CL_UpdateFrameTimes(void)
             ref_msec = 0;
             sync_mode = ASYNC_VIDEO;
         } else if (r_maxfps->integer) {
-            ref_msec = fps_to_msec(Cvar_ClampInteger(r_maxfps, 10, 1000));
+            ref_msec = fps_to_msec(Cvar_ClampInteger(r_maxfps, 5, 1000));
             sync_mode = ASYNC_MAXFPS;
         } else {
             ref_msec = 1;
