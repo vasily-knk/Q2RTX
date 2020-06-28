@@ -69,7 +69,7 @@ static void vsync_changed(cvar_t *self)
     }
 }
 
-static qboolean VID_SDL_GL_LoadLibrary(void)
+qboolean VID_SDL_GL_LoadLibrary(void)
 {
 #if USE_FIXED_LIBGL
     Cvar_Get("gl_driver", LIBGL, CVAR_ROM);
@@ -421,7 +421,7 @@ char *VID_GetDefaultModeList(void)
     else if (buf[len - 1] == ' ')
         buf[len - 1] = 0;
 
-    return buf;
+    return buf;                              
 }
 
 qboolean VID_Init(graphics_api_t api)
@@ -502,7 +502,7 @@ qboolean VID_Init(graphics_api_t api)
     if (icon) {
         SDL_SetWindowIcon(sdl_window, icon);
         SDL_FreeSurface(icon);
-    }
+    }                            
 
     VID_SDL_SetMode();
 

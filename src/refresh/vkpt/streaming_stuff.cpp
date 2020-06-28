@@ -5,6 +5,7 @@
 
 #include "streaming_stuff.h"
 
+
 #include <unordered_map>
 #include <boost/optional.hpp>
 
@@ -24,6 +25,9 @@
 #include "reflection/reflection.h"
 #include "reflection/proc/io_streams_refl.h"
 #include <thread>
+
+#include "vk2gl_converter.h"
+
 
 namespace geom
 {
@@ -56,6 +60,7 @@ int check_fence(void * fence)
 {
     return streaming_stuff_check_fence(fence);
 }
+
 
 webstream::stream_server_settings const &get_webstream_server_settings()
 {
@@ -129,6 +134,12 @@ struct streaming_stuff
 	    stream_server_->set_active_encoder(encoder_.get());        
 
         stream_server_->start();
+
+        if (rtx)
+        {
+            vk2gl_ = create_vk2gl_converter();
+            int aaa = 5;
+        }
     }
     
     
@@ -150,30 +161,36 @@ struct streaming_stuff
 
         binary::output_stream os;
 
-        user_data_.w_ratio = float(width) / float(full_width);
-        user_data_.h_ratio = float(height) / float(full_height);
+        user_data_.w_ratio = 1.f;//float(width) / float(full_width);
+        user_data_.h_ratio = 1.f;//float(height) / float(full_height);
 
         binary::write(os, user_data_);
 
         binary::write(os, cmd_bytes_);
         cmd_bytes_.clear();
 
+        uint32_t gl_tex = 0;
+        if (rtx_)
+        {
+            if (vk2gl_)
+            {
+                vk2gl_->update(vk_image, width, height, full_width, full_height, fence);
+                gl_tex = vk2gl_->get_gl_texture();
+
+                vk2gl_->set_context();
+            }
+        }
+        else
+            gl_tex = uint32_t(vk_image);
+
+
         if (encoder_)
         {
-            webstream::input_video_frame frame = rtx_
-                ?
-                    webstream::input_video_frame(
+            webstream::input_video_frame const frame(
                     width, 
                     height, 
                     webstream::video_format(webstream::video_format::pixel_format_t::Format_RGBA32), 
-                    vk_image,
-                    true)
-                :
-                    webstream::input_video_frame(
-                    width, 
-                    height, 
-                    webstream::video_format(webstream::video_format::pixel_format_t::Format_RGBA32), 
-                    uint32_t(vk_image),
+                    gl_tex,
                     true)
             ;
 
@@ -183,7 +200,10 @@ struct streaming_stuff
 
             assert(ok);
         }
-        
+        if (rtx_ && vk2gl_)
+        {
+            vk2gl_->restore_context();
+        }
         //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
@@ -261,6 +281,8 @@ private:
     vr_streaming::user_data_t user_data_;
 
     std::vector<binary::bytes_t> cmd_bytes_;
+
+    vk2gl_converter_uptr vk2gl_;
 };
 
 std::unique_ptr<streaming_stuff> g_streaming_stuff;
