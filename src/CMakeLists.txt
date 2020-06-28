@@ -289,6 +289,7 @@ SET(SRC_VKPT
 	refresh/vkpt/device_memory_allocator.c
 	refresh/vkpt/god_rays.c
 	refresh/vkpt/streaming_stuff.cpp
+	refresh/vkpt/vk2gl_converter.cpp
 )
 
 SET(HEADERS_VKPT
@@ -300,6 +301,7 @@ SET(HEADERS_VKPT
 	refresh/vkpt/physical_sky.h
 	refresh/vkpt/precomputed_sky.h
 	refresh/vkpt/streaming_stuff.h
+	refresh/vkpt/vk2gl_converter.h
 )
 
 set(SRC_SHADERS
