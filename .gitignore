@@ -22,3 +22,5 @@ baseq2/*
 music/
 .idea/
 .log/*
+
+server_game/q2config.cfg
