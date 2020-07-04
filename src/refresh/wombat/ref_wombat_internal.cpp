@@ -28,6 +28,8 @@
 
 #include "wombat_android_test/wombat_android_test.h"
 
+#include "streaming_client/streaming_client.h"
+
 namespace geom
 {
     template<class S, class processor>
@@ -55,6 +57,7 @@ namespace
 
 struct ref_wombat_internal_impl
     : ref_wombat_internal
+    , streaming_client::client_callbacks
 {
     using iface_ptr = std::shared_ptr<wombat_android_test::iface>;
 
@@ -149,6 +152,27 @@ struct ref_wombat_internal_impl
         resolution_ = geom::point_2ui(width, height);
     }
 
+    void init_streaming_client() override
+    {
+        if (!streaming_client_)
+        {
+            streaming_client_ = std::unique_ptr<streaming_client::client>(streaming_client::create_client(this));
+            streaming_client_->start("ws://localhost:9002");
+        }
+    }
+
+public:
+    void on_frame(vr_streaming::frame_t const& frame, uint8_t const* user_data_ptr, uint32_t user_data_size) override
+    {
+        wombat_android_test::frame_data_t const data = {
+            frame,
+            user_data_ptr,
+            user_data_size
+        };
+
+        iface_->enqueue_frame(data);
+    }
+
 private:
 
     binary::output_stream begin_frame_data()
@@ -183,6 +207,8 @@ private:
     iface_ptr iface_;
     vr_streaming::scene_params_t scene_params_;
     geom::point_2ui resolution_;
+
+    std::unique_ptr<streaming_client::client> streaming_client_;
 };
 
 void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix)

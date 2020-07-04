@@ -476,6 +476,9 @@ static void CL_ParseGamestate(void)
     }
 }
 
+extern cvar_t      *vid_streaming;
+
+
 static void CL_ParseServerData(void)
 {
     char    levelname[MAX_QPATH];
@@ -519,7 +522,7 @@ static void CL_ParseServerData(void)
     // do not change gamedir if connected to local sever either,
     // as it was already done by SV_InitGame, and changing it
     // here will not work since server is now running
-    if (!cls.demo.playback && !sv_running->integer) {
+    if (!vid_streaming->integer && !cls.demo.playback && !sv_running->integer) {
         // pretend it has been set by user, so that 'changed' hook
         // gets called and filesystem is restarted
         Cvar_UserSet("game", cl.gamedir);

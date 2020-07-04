@@ -196,7 +196,7 @@ struct streaming_stuff
 
 
 
-            bool const ok = encoder_->enqueue_frame(frame, nullptr, 0);//reinterpret_cast<uint8_t*>(os.data()), os.size());
+            bool const ok = encoder_->enqueue_frame(frame, reinterpret_cast<uint8_t*>(os.data()), os.size());
 
             assert(ok);
         }

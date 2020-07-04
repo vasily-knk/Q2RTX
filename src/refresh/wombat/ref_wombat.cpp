@@ -12,6 +12,9 @@
 #include "wombat_android_test/wombat_android_test.h"
 #include "ref_wombat_internal.h"
 
+__pragma(comment(lib, "streaming_client.lib"))
+
+
 extern "C"
 {
 
@@ -128,6 +131,12 @@ namespace
             g_internal->send_frame();
     }
 
+    void streaming_client()
+    {
+        if (g_internal)
+            g_internal->init_streaming_client();
+    }
+
 
 } // namespace
 
@@ -138,6 +147,7 @@ qboolean R_Init_Wombat(qboolean total)
 
     Cmd_AddCommand("switch_ref_mode", (xcommand_t)&switch_ref_mode);
     Cmd_AddCommand("send_frame", (xcommand_t)&send_frame);
+    Cmd_AddCommand("streaming_client", (xcommand_t)&streaming_client);
 
 
 
@@ -209,6 +219,8 @@ void R_Shutdown_Wombat(qboolean total)
 
     Cmd_RemoveCommand("switch_ref_mode");
     Cmd_RemoveCommand("send_frame");
+
+    Cmd_RemoveCommand("streaming_client");
 
     g_gl_functions.R_Shutdown(total);
 }
