@@ -1,0 +1,1 @@
+taskkill.exe /F /IM q2rtx.exe /T

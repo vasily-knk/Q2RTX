@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <memory>
+#include <functional>
 
 #include <wombat_android_test/wombat_android_test_fwd.h>
 
@@ -9,7 +10,7 @@
 struct ref_wombat_internal
 {
     using vec3_t = std::array<float, 3>;
-
+    using log_f = std::function<void(std::string const&)>;
 
     virtual ~ref_wombat_internal() = default;
 
@@ -27,5 +28,5 @@ struct ref_wombat_internal
 
 using ref_wombat_internal_uptr = std::unique_ptr<ref_wombat_internal> ;
 
-ref_wombat_internal_uptr create_ref_wombat_internal(std::shared_ptr<wombat_android_test::iface> iface);
+ref_wombat_internal_uptr create_ref_wombat_internal(std::shared_ptr<wombat_android_test::iface> iface, ref_wombat_internal::log_f log);
 

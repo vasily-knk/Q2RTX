@@ -61,8 +61,9 @@ struct ref_wombat_internal_impl
 {
     using iface_ptr = std::shared_ptr<wombat_android_test::iface>;
 
-    explicit ref_wombat_internal_impl(iface_ptr iface)
+    explicit ref_wombat_internal_impl(iface_ptr iface, ref_wombat_internal::log_f log)
         : iface_(iface)
+        , log_(log)
         , scene_params_()
     {
         
@@ -205,6 +206,7 @@ private:
     
 private:
     iface_ptr iface_;
+    log_f log_;
     vr_streaming::scene_params_t scene_params_;
     geom::point_2ui resolution_;
 
@@ -224,7 +226,7 @@ void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *vi
 }
 
 
-ref_wombat_internal_uptr create_ref_wombat_internal(std::shared_ptr<wombat_android_test::iface> iface)
+ref_wombat_internal_uptr create_ref_wombat_internal(std::shared_ptr<wombat_android_test::iface> iface, ref_wombat_internal::log_f log)
 {
-    return std::make_unique<ref_wombat_internal_impl>(iface);
+    return std::make_unique<ref_wombat_internal_impl>(iface, log);
 }
