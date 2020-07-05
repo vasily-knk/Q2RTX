@@ -424,6 +424,9 @@ char *VID_GetDefaultModeList(void)
     return buf;                              
 }
 
+extern cvar_t      *vid_streaming;
+
+
 qboolean VID_Init(graphics_api_t api)
 {
 #ifdef _WINDOWS
@@ -476,7 +479,8 @@ qboolean VID_Init(graphics_api_t api)
 		flags |= SDL_WINDOW_VULKAN;
 	}
 
-	sdl_window = SDL_CreateWindow(PRODUCT, rc.x, rc.y, rc.width, rc.height, flags);
+    char const *title = (!vid_streaming || !vid_streaming->integer) ? PRODUCT : (PRODUCT " Streaming server");
+    sdl_window = SDL_CreateWindow(title, rc.x, rc.y, rc.width, rc.height, flags);
 
 	if (!sdl_window) {
 		Com_EPrintf("Couldn't create SDL window: %s\n", SDL_GetError());

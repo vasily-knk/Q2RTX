@@ -137,6 +137,11 @@ namespace
             g_internal->init_streaming_client();
     }
 
+    void log_to_console(std::string const &)
+    {
+        
+    }
+
 
 } // namespace
 
@@ -180,7 +185,7 @@ qboolean R_Init_Wombat(qboolean total)
     }
 
     if (g_iface)
-        g_internal = create_ref_wombat_internal(g_iface);
+        g_internal = create_ref_wombat_internal(g_iface, log_to_console);
 
     if (g_internal)
         g_internal->update_resolution(g_fbo_width, g_fbo_height);
