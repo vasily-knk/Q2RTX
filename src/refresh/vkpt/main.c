@@ -3055,7 +3055,9 @@ R_EndFrame_RTX(void)
 		qvk.device_count, signal_semaphores, signal_device_indices,
 		qvk.fences_frame_sync[qvk.current_frame_index]);
 
-    streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], 
+	static int img_id = VKPT_IMG_TAA_OUTPUT;
+
+    streaming_stuff_send_frame(qvk.images[img_id], 
 		qvk.extent_render.width, qvk.extent_render.height, 
 		qvk.extent_screen_images.width, qvk.extent_screen_images.height,
 		(qvk.fences_frame_sync[qvk.current_frame_index]));
@@ -3161,7 +3163,7 @@ static float halton(int base, int index) {
 static void
 vkpt_st(void)
 {
-    streaming_stuff_send_text(Cmd_Argv(1));
+    streaming_stuff_send_text(Cmd_Args());
 }
 
 
