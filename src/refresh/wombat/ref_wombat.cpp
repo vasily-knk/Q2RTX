@@ -128,7 +128,7 @@ namespace
     void send_frame()
     {
         if (g_internal)
-            g_internal->send_frame();
+            g_internal->send_frame(42);
     }
 
     void streaming_client()

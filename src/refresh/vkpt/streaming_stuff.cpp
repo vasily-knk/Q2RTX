@@ -38,7 +38,7 @@ struct streaming_stuff
 
         if (rtx)
         {
-            vk2gl_ = create_vk2gl_converter();
+            //vk2gl_ = create_vk2gl_converter();
             int aaa = 5;
         }
     }
@@ -46,29 +46,39 @@ struct streaming_stuff
     
     void dump_bsp_mesh(float const *verts, int num_verts, char const * /*map_name*/)
     {
-        streaming_server_->dump_bsp_mesh(verts, num_verts);
+        streaming_server_->dump_bsp_mesh(0, verts, num_verts);
     }
 
     void send_frame(void *vk_image, unsigned width, unsigned height, unsigned full_width, unsigned full_height, void *fence)
     {
         //user_data_.check_fence = check_fence;
         //user_data_.fence = fence;
+        //
+        //
 
-        uint32_t gl_tex = 0;
+        vr_streaming::frame_texture_t tex;
+
         if (rtx_)
         {
             if (vk2gl_)
             {
                 vk2gl_->update(vk_image, width, height, full_width, full_height, fence);
-                gl_tex = vk2gl_->get_gl_texture();
+                tex = vr_streaming::make_opengl_texture(vk2gl_->get_gl_texture());
 
                 vk2gl_->set_context();
             }
+            else
+            {
+                tex = vr_streaming::make_vulkan_texture(vk_image);
+            }
         }
         else
-            gl_tex = uint32_t(vk_image);
+        {
+            tex = vr_streaming::make_opengl_texture(uint32_t(vk_image));
+        }
 
-        streaming_server_->enqueue_frame_gl(gl_tex, width, height, full_width, full_height);
+
+        streaming_server_->enqueue_frame(tex, width, height, full_width, full_height, check_fence, fence);
         if (rtx_ && vk2gl_)
         {
             vk2gl_->restore_context();

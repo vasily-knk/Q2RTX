@@ -141,8 +141,9 @@ struct ref_wombat_internal_impl
         }
     }
 
-    void send_frame() override
+    void send_frame(uint32_t tex_id) override
     {
+        tex_id_ = tex_id;
         auto os = begin_frame_data();
 
         end_frame_data(os);
@@ -192,6 +193,7 @@ private:
     {
         vr_streaming::frame_t frame;
 
+        frame.tex_id = tex_id_;
         frame.width = resolution_.x;
         frame.height = resolution_.y;
 
@@ -211,6 +213,8 @@ private:
     geom::point_2ui resolution_;
 
     std::unique_ptr<streaming_client::client> streaming_client_;
+
+    uint32_t tex_id_ = 0;
 };
 
 void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix)
