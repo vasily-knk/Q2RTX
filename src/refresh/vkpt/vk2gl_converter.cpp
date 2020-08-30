@@ -79,7 +79,7 @@ struct vk2gl_converter_impl
                 for (size_t x = 0; x < tex_width_; ++x)
                 {
                     uint32_t const v = std::min<uint32_t>((x + y) / 2, 255);
-                    data.at(y * tex_width_ + x) = v | v << 8 | v << 16 | v << 24;
+                    data.at(y * tex_width_ + x) = ~0;//v | v << 8 | v << 16 | v << 24;
                 }
             }
 
@@ -117,9 +117,9 @@ struct vk2gl_converter_impl
 
         SDL_GL_MakeCurrent(window_, context_);
 
-        check_gl_error();
-        glDrawVkImageNV_(reinterpret_cast<uint64_t>(vk_image), 0, 0.f, 0.f, tex_width_, tex_height_, 0.f, 0.f, 0.f, w_ratio, h_ratio);
-        check_gl_error();
+        //check_gl_error();
+        //glDrawVkImageNV_(reinterpret_cast<uint64_t>(vk_image), 0, 0.f, 0.f, tex_width_, tex_height_, 0.f, 0.f, 0.f, w_ratio, h_ratio);
+        //check_gl_error();
     }
 
 

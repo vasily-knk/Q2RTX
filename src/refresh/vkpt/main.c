@@ -2820,7 +2820,7 @@ R_EndFrame_RTX(void)
     streaming_stuff_send_frame(qvk.images[VKPT_IMG_TAA_OUTPUT], 
 		qvk.extent_render.width, qvk.extent_render.height, 
 		qvk.extent_screen_images.width, qvk.extent_screen_images.height,
-		qvk.fences_frame_sync[qvk.current_frame_index]);
+		(qvk.fences_frame_sync[qvk.current_frame_index]));
 
 
 
