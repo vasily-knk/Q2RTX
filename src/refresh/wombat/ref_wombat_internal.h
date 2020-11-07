@@ -3,6 +3,7 @@
 #include <utility>
 #include <memory>
 #include <functional>
+#include <string>
 
 #include <wombat_android_test/wombat_android_test_fwd.h>
 
