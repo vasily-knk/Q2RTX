@@ -74,7 +74,7 @@ struct streaming_stuff
         }
         else
         {
-            tex = vr_streaming::make_opengl_texture(uint32_t(vk_image));
+            tex = vr_streaming::make_fake_opengl_texture(uint32_t(vk_image));
         }
 
 
