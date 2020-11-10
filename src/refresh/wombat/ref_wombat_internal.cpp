@@ -55,6 +55,8 @@ namespace
 
 } // namespace
 
+#if 0
+
 struct ref_wombat_internal_impl
     : ref_wombat_internal
     , streaming_client::client_callbacks
@@ -164,7 +166,7 @@ struct ref_wombat_internal_impl
     }
 
 public:
-    void on_frame(vr_streaming::frame_t const& frame, uint8_t const* user_data_ptr, uint32_t user_data_size) override
+   /* void on_frame(vr_streaming::frame_t const& frame, uint8_t const* user_data_ptr, uint32_t user_data_size) override
     {
         wombat_android_test::frame_data_t const data = {
             frame,
@@ -173,7 +175,7 @@ public:
         };
 
         iface_->enqueue_frame(data);
-    }
+    }*/
 
 private:
 
@@ -217,6 +219,8 @@ private:
     uint32_t tex_id_ = 0;
 };
 
+#endif
+
 void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix)
 {
     geom::cprf const orien(90.f - viewangles[1], -viewangles[0], viewangles[2]);
@@ -232,5 +236,5 @@ void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *vi
 
 ref_wombat_internal_uptr create_ref_wombat_internal(std::shared_ptr<wombat_android_test::iface> iface, ref_wombat_internal::log_f log)
 {
-    return std::make_unique<ref_wombat_internal_impl>(iface, log);
+    return nullptr;//std::make_unique<ref_wombat_internal_impl>(iface, log);
 }

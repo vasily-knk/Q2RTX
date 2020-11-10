@@ -74,11 +74,20 @@ struct streaming_stuff
         }
         else
         {
-            tex = vr_streaming::make_fake_opengl_texture(uint32_t(vk_image));
+            tex = vr_streaming::make_dummy_texture();
         }
 
+        vr_streaming::video_frame_t video_frame;
+        video_frame.tex = tex;
 
-        streaming_server_->enqueue_frame(tex, width, height, full_width, full_height, check_fence, fence);
+        video_frame.width = width;
+        video_frame.height = height;
+        video_frame.full_width = full_width;
+        video_frame.full_height = full_height;
+        video_frame.check_fence = check_fence;
+        video_frame.fence = fence;
+
+        streaming_server_->enqueue_frame(video_frame);
         if (rtx_ && vk2gl_)
         {
             vk2gl_->restore_context();
