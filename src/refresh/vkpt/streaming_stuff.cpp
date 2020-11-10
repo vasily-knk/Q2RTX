@@ -56,6 +56,8 @@ struct streaming_stuff
         //
         //
 
+        streaming_server_->update();
+
         vr_streaming::frame_texture_t tex;
 
         if (rtx_)

@@ -12,8 +12,6 @@
 #include "wombat_android_test/wombat_android_test.h"
 #include "ref_wombat_internal.h"
 
-__pragma(comment(lib, "streaming_client.lib"))
-
 
 extern "C"
 {

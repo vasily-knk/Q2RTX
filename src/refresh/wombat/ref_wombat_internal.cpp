@@ -30,6 +30,8 @@
 
 #include "streaming_client/streaming_client.h"
 
+#include "vr_streaming/network_cmd_server.h"
+
 namespace geom
 {
     template<class S, class processor>
@@ -49,17 +51,17 @@ namespace geom
 #include "vr_streaming/user_data.h"
 #include "vr_streaming/cmds.h"
 
+__pragma(comment(lib, "network_cmd_server.lib"))
 
 namespace
 {
 
 } // namespace
 
-#if 0
 
 struct ref_wombat_internal_impl
     : ref_wombat_internal
-    , streaming_client::client_callbacks
+    , vr_streaming::network_cmd_client_callbacks
 {
     using iface_ptr = std::shared_ptr<wombat_android_test::iface>;
 
@@ -74,24 +76,24 @@ struct ref_wombat_internal_impl
 
     void dump_bsp_vertices(float const* verts, size_t num_verts) override
     {
-        auto os = begin_frame_data();
-
-        binary::write(os, uint32_t(1));
-
-        binary::bytes_t cmd_bytes;
-        {
-            vr_streaming::cmd_mesh_t cmd;
-
-            auto const *src = reinterpret_cast<geom::point_3f const*>(verts);
-            cmd.points.assign(src, src + num_verts);
-
-            binary::write(cmd_bytes, cmd.id());
-            binary::write(cmd_bytes, cmd);
-        }
-
-        binary::write(os, cmd_bytes);
-
-        end_frame_data(os);
+        // auto os = begin_frame_data();
+        //
+        // binary::write(os, uint32_t(1));
+        //
+        // binary::bytes_t cmd_bytes;
+        // {
+        //     vr_streaming::cmd_mesh_t cmd;
+        //
+        //     auto const *src = reinterpret_cast<geom::point_3f const*>(verts);
+        //     cmd.points.assign(src, src + num_verts);
+        //
+        //     binary::write(cmd_bytes, cmd.id());
+        //     binary::write(cmd_bytes, cmd);
+        // }
+        //
+        // binary::write(os, cmd_bytes);
+        //
+        // end_frame_data(os);
     }
 
     void update_matrices(float const* vieworg, float const* viewangles, float fovx, float fovy) override
@@ -145,10 +147,10 @@ struct ref_wombat_internal_impl
 
     void send_frame(uint32_t tex_id) override
     {
-        tex_id_ = tex_id;
-        auto os = begin_frame_data();
-
-        end_frame_data(os);
+        // tex_id_ = tex_id;
+        // auto os = begin_frame_data();
+        //
+        // end_frame_data(os);
     }
 
     void update_resolution(unsigned width, unsigned height) override
@@ -158,15 +160,19 @@ struct ref_wombat_internal_impl
 
     void init_streaming_client() override
     {
-        if (!streaming_client_)
-        {
-            streaming_client_ = std::unique_ptr<streaming_client::client>(streaming_client::create_client(this));
-            streaming_client_->start("ws://localhost:9002");
-        }
+        cmd_client_.reset();
+        cmd_client_ = vr_streaming::create_network_cmd_client(this);
     }
 
-public:
-   /* void on_frame(vr_streaming::frame_t const& frame, uint8_t const* user_data_ptr, uint32_t user_data_size) override
+
+    void send_cmd(char const* data, uint32_t size) override
+    {
+        iface_->get_cmd_server().send_cmd(data, size);
+    }
+
+
+
+    /* void on_frame(vr_streaming::frame_t const& frame, uint8_t const* user_data_ptr, uint32_t user_data_size) override
     {
         wombat_android_test::frame_data_t const data = {
             frame,
@@ -177,36 +183,52 @@ public:
         iface_->enqueue_frame(data);
     }*/
 
+    void on_connected() override
+    {
+        log_("Streaming client connected");
+    }
+
+    void on_refused() override
+    {
+        cmd_client_.reset();
+        log_("Streaming client connection refused");
+    }
+
+    void on_disconnected() override
+    {
+        cmd_client_.reset();
+        log_("Streaming client disconnected");
+    }
 private:
 
-    binary::output_stream begin_frame_data()
-    {
-        binary::output_stream os;
-
-        vr_streaming::user_data_t user_data;
-        user_data.scene_params = scene_params_;
-        binary::write(os, user_data);
-
-        return os;
-        
-    }
-
-    void end_frame_data(binary::output_stream const &os)
-    {
-        vr_streaming::frame_t frame;
-
-        frame.tex_id = tex_id_;
-        frame.width = resolution_.x;
-        frame.height = resolution_.y;
-
-        wombat_android_test::frame_data_t const data = {
-            frame,
-            reinterpret_cast<uint8_t const *>(os.data()),
-            uint32_t(os.size())
-        };
-
-        iface_->enqueue_frame(data);
-    }
+    // binary::output_stream begin_frame_data()
+    // {
+    //     binary::output_stream os;
+    //
+    //     vr_streaming::user_data_t user_data;
+    //     user_data.scene_params = scene_params_;
+    //     binary::write(os, user_data);
+    //
+    //     return os;
+    //     
+    // }
+    //
+    // void end_frame_data(binary::output_stream const &os)
+    // {
+    //     vr_streaming::frame_t frame;
+    //
+    //     frame.tex_id = tex_id_;
+    //     frame.width = resolution_.x;
+    //     frame.height = resolution_.y;
+    //
+    //     wombat_android_test::frame_data_t const data = {
+    //         frame,
+    //         reinterpret_cast<uint8_t const *>(os.data()),
+    //         uint32_t(os.size())
+    //     };
+    //
+    //     iface_->enqueue_frame(data);
+    // }
     
 private:
     iface_ptr iface_;
@@ -214,12 +236,11 @@ private:
     vr_streaming::scene_params_t scene_params_;
     geom::point_2ui resolution_;
 
-    std::unique_ptr<streaming_client::client> streaming_client_;
+    vr_streaming::network_cmd_client_uptr cmd_client_;
 
     uint32_t tex_id_ = 0;
 };
 
-#endif
 
 void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *viewangles, float *dst_matrix)
 {
@@ -236,5 +257,5 @@ void ref_wombat_internal::fill_view_matrix(float const *vieworg, float const *vi
 
 ref_wombat_internal_uptr create_ref_wombat_internal(std::shared_ptr<wombat_android_test::iface> iface, ref_wombat_internal::log_f log)
 {
-    return nullptr;//std::make_unique<ref_wombat_internal_impl>(iface, log);
+    return std::make_unique<ref_wombat_internal_impl>(iface, log);
 }
