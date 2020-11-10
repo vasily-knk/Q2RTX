@@ -206,8 +206,8 @@ qboolean R_Init_Wombat(qboolean total)
 
     g_valid_fbo = false;
 
-    g_iface->on_text_message(0, "helicopter 0");
-    g_iface->on_text_message(0, "interpolator 2 3");
+    //g_iface->on_text_message(0, "helicopter 0");
+    //g_iface->on_text_message(0, "interpolator 2 3");
 
     //SDL_GL_MakeCurrent(win, context);
 
@@ -233,6 +233,8 @@ void R_Shutdown_Wombat(qboolean total)
 void R_BeginRegistration_Wombat(const char *map)
 {
     g_gl_functions.R_BeginRegistration(map);
+
+	return;
 
     auto *bsp = GL_GetBSP();
 
