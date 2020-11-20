@@ -2909,9 +2909,9 @@ vkpt_show_pvs(void)
 }
 
 void
-vkpt_st(void)
+streaming_server_st(char const *text)
 {
-    streaming_stuff_send_text(Cmd_Args());
+    streaming_stuff_send_text(text);
 }
 
 
