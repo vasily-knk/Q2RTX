@@ -294,7 +294,18 @@ CL_InitRefresh
 ============
 */
 
-void vkpt_st();
+void streaming_server_st(char const *args);
+void streaming_client_st(char const *args);
+
+
+void streaming_st()
+{
+    char const *args = Cmd_Args();
+
+    streaming_server_st(args);
+    streaming_client_st(args);
+}
+
 
 void CL_InitRefresh(void)
 {
@@ -342,7 +353,7 @@ void CL_InitRefresh(void)
 
     Com_SetLastError(NULL);
 
-    Cmd_AddCommand("st", (xcommand_t)&vkpt_st);
+    Cmd_AddCommand("st", (xcommand_t)&streaming_st);
 
 
 #if REF_GL && REF_VKPT

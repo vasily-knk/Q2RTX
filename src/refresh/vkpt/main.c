@@ -3160,10 +3160,10 @@ static float halton(int base, int index) {
 	return r;
 };
 
-static void
-vkpt_st(void)
+void
+streaming_server_st(char const *text)
 {
-    streaming_stuff_send_text(Cmd_Args());
+    streaming_stuff_send_text(text);
 }
 
 

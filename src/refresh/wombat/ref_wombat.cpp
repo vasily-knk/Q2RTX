@@ -34,6 +34,7 @@ extern "C"
     bsp_t *GL_GetBSP();
 
     vec3_t *extract_bsp_mesh_vertices(bsp_t *bsp, const char* map_name, int *out_num_verts);
+    void streaming_client_st(char const *text);
 
 }
 
@@ -142,6 +143,12 @@ namespace
 
 
 } // namespace
+
+void streaming_client_st(char const *text)
+{
+    if (g_iface)
+        g_iface->send_text_message(text);
+}
 
 qboolean R_Init_Wombat(qboolean total)
 {
