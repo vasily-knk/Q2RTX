@@ -245,7 +245,7 @@ void R_BeginRegistration_Wombat(const char *map)
 
     int num_verts;
     auto *verts = reinterpret_cast<ref_wombat_internal::vec3_t*>(extract_bsp_mesh_vertices(bsp, map, &num_verts));
-    g_internal->dump_bsp_vertices(reinterpret_cast<float*>(verts), num_verts);
+    //g_internal->dump_bsp_vertices(reinterpret_cast<float*>(verts), num_verts);
 
     Z_Free(verts);
 

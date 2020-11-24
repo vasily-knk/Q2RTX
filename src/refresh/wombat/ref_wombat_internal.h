@@ -15,7 +15,6 @@ struct ref_wombat_internal
 
     virtual ~ref_wombat_internal() = default;
 
-    virtual void dump_bsp_vertices(float const *verts, size_t num_verts) = 0;
     virtual void update_matrices(float const *vieworg, float const *viewangles, float fovx, float fovy) = 0;
     virtual void send_frame(uint32_t tex_id) = 0;
 

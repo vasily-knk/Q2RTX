@@ -76,7 +76,7 @@ struct streaming_stuff
         }
         else
         {
-            tex = vr_streaming::make_dummy_texture();
+            tex = vr_streaming::make_opengl_texture(reinterpret_cast<uint32_t>(vk_image));
         }
 
         vr_streaming::video_frame_t video_frame;
