@@ -74,27 +74,6 @@ struct ref_wombat_internal_impl
     }
 
 
-    void dump_bsp_vertices(float const* verts, size_t num_verts) override
-    {
-        // auto os = begin_frame_data();
-        //
-        // binary::write(os, uint32_t(1));
-        //
-        // binary::bytes_t cmd_bytes;
-        // {
-        //     vr_streaming::cmd_mesh_t cmd;
-        //
-        //     auto const *src = reinterpret_cast<geom::point_3f const*>(verts);
-        //     cmd.points.assign(src, src + num_verts);
-        //
-        //     binary::write(cmd_bytes, cmd.id());
-        //     binary::write(cmd_bytes, cmd);
-        // }
-        //
-        // binary::write(os, cmd_bytes);
-        //
-        // end_frame_data(os);
-    }
 
     void update_matrices(float const* vieworg, float const* viewangles, float fovx, float fovy) override
     {
