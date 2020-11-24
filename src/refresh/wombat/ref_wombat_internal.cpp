@@ -52,6 +52,7 @@ namespace geom
 #include "vr_streaming/cmds.h"
 
 __pragma(comment(lib, "network_cmd_server.lib"))
+__pragma(comment(lib, "streaming_client.lib"))
 
 namespace
 {
@@ -62,6 +63,7 @@ namespace
 struct ref_wombat_internal_impl
     : ref_wombat_internal
     , vr_streaming::network_cmd_client_callbacks
+    , streaming_client::client_callbacks
 {
     using iface_ptr = std::shared_ptr<wombat_android_test::iface>;
 
@@ -139,6 +141,12 @@ struct ref_wombat_internal_impl
 
     void init_streaming_client() override
     {
+        if (!streaming_client_)
+        {
+            streaming_client_ = std::unique_ptr<streaming_client::client>(streaming_client::create_client(this));
+            streaming_client_->start("ws://localhost:9002");
+        }
+
         cmd_client_.reset();
         cmd_client_ = vr_streaming::create_network_cmd_client(this);
     }
@@ -178,6 +186,13 @@ struct ref_wombat_internal_impl
         cmd_client_.reset();
         log_("Streaming client disconnected");
     }
+
+
+    void enqueue_frame(vr_streaming::video_frame_t const& video_frame,
+        vr_streaming::scene_params_t const& scene_params) override
+    {
+        iface_->get_video_streaming_server().enqueue_frame(video_frame, scene_params);
+    }
 private:
 
     // binary::output_stream begin_frame_data()
@@ -215,7 +230,9 @@ private:
     vr_streaming::scene_params_t scene_params_;
     geom::point_2ui resolution_;
 
+    std::unique_ptr<streaming_client::client> streaming_client_;
     vr_streaming::network_cmd_client_uptr cmd_client_;
+
 
     uint32_t tex_id_ = 0;
 };
