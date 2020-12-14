@@ -27,6 +27,11 @@ int check_fence(void * fence)
     return streaming_stuff_check_fence(fence);
 }
 
+float convert_coord(float x)
+{
+    return x * 0.025f;
+}
+
 
 
 struct streaming_stuff
@@ -46,7 +51,12 @@ struct streaming_stuff
     
     void dump_bsp_mesh(float const *verts, int num_verts, char const * /*map_name*/)
     {
-        streaming_server_->dump_bsp_mesh(0, verts, num_verts);
+        scaled_mesh_.assign(verts, verts + num_verts * 3);
+
+        for (float &f : scaled_mesh_)
+            f = convert_coord(f);
+
+        streaming_server_->dump_bsp_mesh(0, scaled_mesh_.data(), num_verts);
     }
 
     void send_frame(void *vk_image, unsigned width, unsigned height, unsigned full_width, unsigned full_height, void *fence)
@@ -113,7 +123,10 @@ struct streaming_stuff
             proj_transformed[0] *= -1.f;
         }
 
-        streaming_server_->set_matrices_quake2(vieworg, viewangles_transformed, proj_transformed);
+        float vieworg_scaled[3];
+        std::transform(vieworg, vieworg + 3, vieworg_scaled, convert_coord);
+
+        streaming_server_->set_matrices_quake2(vieworg_scaled, viewangles_transformed, proj_transformed);
     }
 
     void send_text(char const *text)
@@ -126,6 +139,7 @@ private:
     vr_streaming::streaming_server_uptr streaming_server_;
 
     vk2gl_converter_uptr vk2gl_;
+    std::vector<float> scaled_mesh_;
 };
 
 std::unique_ptr<streaming_stuff> g_streaming_stuff;
