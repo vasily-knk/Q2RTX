@@ -619,7 +619,7 @@ void R_RenderFrame_GL(refdef_t *fd)
 
     GL_ShowErrors(__func__);
 
-    streaming_stuff_send_frame((void*)(42), r_config.width, r_config.height, r_config.width, r_config.height, NULL);
+    streaming_stuff_send_frame((void*)(0), r_config.width, r_config.height, r_config.width, r_config.height, NULL);
 
 }
 
