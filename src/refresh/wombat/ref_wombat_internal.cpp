@@ -87,9 +87,8 @@ struct ref_wombat_internal_impl
         sp.state.global_pos = geom::point_3(vieworg[0], vieworg[1], vieworg[2]);
         sp.desired_orien = sp.state.orien;
 
-        {
-            auto &matrix = sp.proj;
 
+        {
             float const znear = 2.;
 
             float const zfar = 2048;
@@ -100,29 +99,14 @@ struct ref_wombat_internal_impl
             float const xmax = znear * tan(fovx * geom::pi / 360.0);
             float const xmin = -xmax;
 
-            float const width = xmax - xmin;
-            float const height = ymax - ymin;
-            float const depth = zfar - znear;
+            auto & pp = sp.proj_params;
 
-            matrix[0] = 2 * znear / width;
-            matrix[4] = 0;
-            matrix[8] = (xmax + xmin) / width;
-            matrix[12] = 0;
-
-            matrix[1] = 0;
-            matrix[5] = 2 * znear / height;
-            matrix[9] = (ymax + ymin) / height;
-            matrix[13] = 0;
-
-            matrix[2] = 0;
-            matrix[6] = 0;
-            matrix[10] = -(zfar + znear) / depth;
-            matrix[14] = -2 * zfar * znear / depth;
-
-            matrix[3] = 0;
-            matrix[7] = 0;
-            matrix[11] = -1;
-            matrix[15] = 0;
+            pp.left = xmin;
+            pp.right = xmax;
+            pp.bottom = ymin;
+            pp.top = ymax;
+            pp.znear = znear;
+            pp.zfar = zfar;
         }
     }
 
