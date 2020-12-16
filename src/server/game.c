@@ -806,7 +806,7 @@ static void *_SV_LoadGameLibrary(const char *path)
     else
         Com_Printf("Loaded game library from %s\n", path);
 
-    return entry;
+    return entry;                                    
 }
 
 static void *SV_LoadGameLibrary(const char *game, const char *prefix)
