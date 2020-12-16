@@ -16,6 +16,8 @@
 
 #include "vk2gl_converter.h"
 #include "vr_streaming/vr_streaming_server.h"
+#include "vr_streaming/frame.h"
+#include "vr_streaming/proj_params.h"
 
 __pragma(comment(lib, "vr_streaming_server.lib"))
 
@@ -107,26 +109,24 @@ struct streaming_stuff
         //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    void set_matrices(float const *vieworg, float const *viewangles, float const *proj)
+    void set_matrices(float const *vieworg, float const *viewangles, proj_params_t const &pp)
     {
         float viewangles_transformed[] = { 90.f - viewangles[1], -viewangles[0], viewangles[2] };
-        float proj_transformed[16];
-        memcpy(proj_transformed, proj, sizeof(proj_transformed));
-
-        // todo: fact hack, may break any minute!
-        //
-        if (rtx_)
-        {
-            for (float &v : proj_transformed)
-                v *= -1.f;
-            
-            proj_transformed[0] *= -1.f;
-        }
 
         float vieworg_scaled[3];
         std::transform(vieworg, vieworg + 3, vieworg_scaled, convert_coord);
 
-        streaming_server_->set_matrices_quake2(vieworg_scaled, viewangles_transformed, proj_transformed);
+        vr_streaming::proj_params_t proj_params = {
+            pp.left,
+            pp.right,
+            pp.bottom,
+            pp.top,
+            convert_coord(pp.znear),
+            convert_coord(pp.zfar),
+        };
+
+
+        streaming_server_->set_matrices_quake2(vieworg_scaled, viewangles_transformed, proj_params);
     }
 
     void send_text(char const *text)
@@ -189,10 +189,10 @@ void streaming_stuff_shutdown()
     g_streaming_stuff.reset();
 }
 
-void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, float const *proj)
+void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, proj_params_t const *proj_params)
 {
     if (g_streaming_stuff)
-        g_streaming_stuff->set_matrices(vieworg, viewangles, proj);
+        g_streaming_stuff->set_matrices(vieworg, viewangles, *proj_params);
 }
 
 void streaming_stuff_send_text(char const *text)
