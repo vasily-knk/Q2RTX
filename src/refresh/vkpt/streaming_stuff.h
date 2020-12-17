@@ -12,17 +12,7 @@ void streaming_stuff_init(int enabled, int rtx);
 void streaming_stuff_send_frame(void *vk_image, unsigned width, unsigned height, unsigned full_width, unsigned full_height, void *fence);
 void streaming_stuff_shutdown();
 
-typedef struct 
-{
-    float left;
-    float right;
-    float top;
-    float bottom;
-    float znear;
-    float zfar;
-} proj_params_t;
-
-void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, proj_params_t const *proj_params);
+void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, float fovx_deg, float fovy_deg);
 
 void streaming_stuff_send_text(char const *text);
 

@@ -2090,7 +2090,7 @@ prepare_ubo(refdef_t *fd, mleaf_t* viewleaf, const reference_mode_t* ref_mode, c
 	inverse(V, ubo->invV);
 	inverse(P, ubo->invP);
 
-    streaming_stuff_set_matrices(fd->vieworg, fd->viewangles, P, 1);
+    streaming_stuff_set_matrices(fd->vieworg, fd->viewangles, fd->fov_x, fd->fov_y);
 
 	if (cvar_pt_projection->integer == 1 && render_world)
 	{

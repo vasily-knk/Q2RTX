@@ -109,20 +109,32 @@ struct streaming_stuff
         //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    void set_matrices(float const *vieworg, float const *viewangles, proj_params_t const &pp)
+    void set_matrices(float const *vieworg, float const *viewangles, float fovx_deg, float fovy_deg)
     {
         float viewangles_transformed[] = { 90.f - viewangles[1], -viewangles[0], viewangles[2] };
 
         float vieworg_scaled[3];
         std::transform(vieworg, vieworg + 3, vieworg_scaled, convert_coord);
 
+        float xmin, xmax, ymin, ymax, zfar, znear;
+        znear = convert_coord(2.f);
+        zfar = convert_coord(2048.f);
+
+        double constexpr pi = 3.14159265358979323846;
+
+        ymax = znear * tan(fovy_deg * pi / 360.0);
+        ymin = -ymax;
+
+        xmax = znear * tan(fovx_deg * pi / 360.0);
+        xmin = -xmax;
+
         vr_streaming::proj_params_t proj_params = {
-            pp.left,
-            pp.right,
-            pp.bottom,
-            pp.top,
-            convert_coord(pp.znear),
-            convert_coord(pp.zfar),
+            xmin,
+            xmax,
+            ymin,
+            ymax,
+            znear,
+            zfar,
         };
 
 
@@ -189,10 +201,10 @@ void streaming_stuff_shutdown()
     g_streaming_stuff.reset();
 }
 
-void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, proj_params_t const *proj_params)
+void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, float fovx_deg, float fovy_deg)
 {
     if (g_streaming_stuff)
-        g_streaming_stuff->set_matrices(vieworg, viewangles, *proj_params);
+        g_streaming_stuff->set_matrices(vieworg, viewangles, fovx_deg, fovy_deg);
 }
 
 void streaming_stuff_send_text(char const *text)

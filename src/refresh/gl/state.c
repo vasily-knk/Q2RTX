@@ -281,7 +281,7 @@ void GL_Setup2D(void)
     qglLoadIdentity();
 }
 
-static void GL_Frustum(GLfloat *out_matrix, proj_params_t *out_pp)
+static void GL_Frustum(GLfloat *out_matrix)
 {
     GLfloat xmin, xmax, ymin, ymax, zfar, znear;
     GLfloat width, height, depth;
@@ -329,16 +329,6 @@ static void GL_Frustum(GLfloat *out_matrix, proj_params_t *out_pp)
 
     if (out_matrix)
         memcpy(out_matrix, matrix, sizeof(matrix));
-
-    if (out_pp)
-    {
-        out_pp->left = xmin;
-        out_pp->right = xmax;
-        out_pp->bottom = ymin;
-        out_pp->top = ymax;
-        out_pp->znear = znear;
-        out_pp->zfar = zfar;
-    }
 }
 
 static void GL_RotateForViewer(void)
@@ -380,9 +370,8 @@ void GL_Setup3D(void)
                 glr.fd.width, glr.fd.height);
 
     GLfloat projMatrix[16];
-    proj_params_t pp;
-    GL_Frustum(projMatrix, &pp);
-    streaming_stuff_set_matrices(glr.fd.vieworg, glr.fd.viewangles, &pp);
+    GL_Frustum(projMatrix);
+    streaming_stuff_set_matrices(glr.fd.vieworg, glr.fd.viewangles, glr.fd.fov_x, glr.fd.fov_y);
 
     GL_RotateForViewer();
 
