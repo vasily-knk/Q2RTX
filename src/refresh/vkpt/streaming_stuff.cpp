@@ -101,6 +101,11 @@ struct streaming_stuff
         video_frame.check_fence = check_fence;
         video_frame.fence = fence;
 
+        video_frame.flags |= vr_streaming::video_frame_t::flag_flipped;
+
+        if (rtx_)
+            video_frame.flags |= vr_streaming::video_frame_t::flag_16bit;
+
         streaming_server_->enqueue_frame(video_frame);
         if (rtx_ && vk2gl_)
         {
