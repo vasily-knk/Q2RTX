@@ -85,7 +85,6 @@ struct ref_wombat_internal_impl
 
         sp.state.orien = geom::quaternionf(orien);
         sp.state.global_pos = geom::point_3(vieworg[0], vieworg[1], vieworg[2]);
-        sp.desired_orien = sp.state.orien;
 
 
         {

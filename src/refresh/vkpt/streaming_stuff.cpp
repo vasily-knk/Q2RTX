@@ -58,7 +58,8 @@ struct streaming_stuff
         for (float &f : scaled_mesh_)
             f = convert_coord(f);
 
-        streaming_server_->dump_bsp_mesh(0, scaled_mesh_.data(), num_verts);
+        auto const mesh_id = streaming_server_->register_mesh(scaled_mesh_.data(), num_verts);
+        streaming_server_->place_mesh(mesh_id, streaming_server_->convert_state_empty());
     }
 
     void send_frame(void *vk_image, unsigned width, unsigned height, unsigned full_width, unsigned full_height, void *fence)
@@ -142,8 +143,10 @@ struct streaming_stuff
             zfar,
         };
 
+        auto const state = streaming_server_->convert_state_quake2(vieworg_scaled, viewangles_transformed);
+        streaming_server_->set_matrices(state, proj_params);
+        streaming_server_->set_desired_state(state);
 
-        streaming_server_->set_matrices_quake2(vieworg_scaled, viewangles_transformed, proj_params);
     }
 
     void send_text(char const *text)
