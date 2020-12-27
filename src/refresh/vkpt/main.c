@@ -2240,6 +2240,8 @@ prepare_ubo(refdef_t *fd, mleaf_t* viewleaf, const reference_mode_t* ref_mode, c
 void
 R_RenderFrame_RTX(refdef_t *fd)
 {
+	streaming_stuff_override_view(fd->vieworg, fd->viewangles);
+
     vkpt_refdef.fd = fd;
 	qboolean render_world = (fd->rdflags & RDF_NOWORLDMODEL) == 0;
 
@@ -2545,6 +2547,8 @@ R_RenderFrame_RTX(refdef_t *fd)
 	if (vkpt_refdef.fd && vkpt_refdef.fd->lightstyles) {
 		memcpy(vkpt_refdef.prev_lightstyles, vkpt_refdef.fd->lightstyles, sizeof(vkpt_refdef.prev_lightstyles));
 	}
+
+	streaming_stuff_restore_view(fd->vieworg, fd->viewangles);
 }
 
 static void temporal_cvar_changed(cvar_t *self)

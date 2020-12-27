@@ -34,6 +34,10 @@ float convert_coord(float x)
     return x * 0.025f;
 }
 
+float convert_coord_back(float x)
+{
+    return x * 40.f;
+}
 
 
 struct streaming_stuff
@@ -117,10 +121,15 @@ struct streaming_stuff
 
     void set_matrices(float const *vieworg, float const *viewangles, float fovx_deg, float fovy_deg)
     {
-        float viewangles_transformed[] = { 90.f - viewangles[1], -viewangles[0], viewangles[2] };
+        float const viewangles_transformed[] = { 90.f - viewangles[1], -viewangles[0], viewangles[2] };
+        float const old_viewangles_transformed[] = { 90.f - old_viewangles_[1], -old_viewangles_[0], old_viewangles_[2] };
 
         float vieworg_scaled[3];
         std::transform(vieworg, vieworg + 3, vieworg_scaled, convert_coord);
+
+        float old_vieworg_scaled[3];
+        std::transform(old_vieworg_, old_vieworg_ + 3, old_vieworg_scaled, convert_coord);
+
 
         float xmin, xmax, ymin, ymax, zfar, znear;
         znear = convert_coord(2.f);
@@ -145,7 +154,9 @@ struct streaming_stuff
 
         auto const state = streaming_server_->convert_state_quake2(vieworg_scaled, viewangles_transformed);
         streaming_server_->set_matrices(state, proj_params);
-        streaming_server_->set_desired_state(state);
+
+        auto const desired_state = streaming_server_->convert_state_quake2(old_vieworg_scaled, old_viewangles_transformed);
+        streaming_server_->set_desired_state(desired_state);
 
     }
 
@@ -154,12 +165,65 @@ struct streaming_stuff
         streaming_server_->send_text(text);
     }
 
+    void override_view(float *vieworg, float *viewangles)
+    {
+        assert(!view_ovveriden_);
+        view_ovveriden_ = true;
+
+        memcpy(old_vieworg_, vieworg, sizeof(old_vieworg_));
+        memcpy(old_viewangles_, viewangles, sizeof(old_viewangles_));
+
+        auto const client_state = streaming_server_->get_client_state();
+
+        float vieworg_temp[3], viewangles_temp[3];
+
+        streaming_server_->convert_state_quake2(client_state, vieworg_temp, viewangles_temp);
+        std::transform(vieworg_temp, vieworg_temp + 3, vieworg, convert_coord_back);
+
+        //{ 90.f - viewangles[1], -viewangles[0], viewangles[2] }
+
+        viewangles[0] = -viewangles_temp[1];
+        viewangles[1] = 90.f - viewangles_temp[0];
+        viewangles[2] = viewangles_temp[2];
+
+
+        /*
+        float constexpr radius = 10.f;
+
+        static auto const start_time = std::chrono::system_clock::now();
+
+        auto const time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time).count();
+
+        float time = time_ms * 0.001f;
+        float constexpr speed = 3.1415926 * 0.5;
+
+        vieworg[0] += radius * cos(time * speed);
+        vieworg[1] += radius * sin(time * speed);
+
+        */
+
+    }
+
+    void restore_view(float *vieworg, float *viewangles)
+    {
+        assert(view_ovveriden_);
+        view_ovveriden_ = false;
+
+        memcpy(vieworg, old_vieworg_, sizeof(old_vieworg_));
+        memcpy(viewangles, old_viewangles_, sizeof(old_viewangles_));
+    }
+
+
 private:
     bool rtx_;
     vr_streaming::streaming_server_uptr streaming_server_;
 
     vk2gl_converter_uptr vk2gl_;
     std::vector<float> scaled_mesh_;
+
+    float old_vieworg_[3], old_viewangles_[3];
+
+    bool view_ovveriden_ = false;
 };
 
 std::unique_ptr<streaming_stuff> g_streaming_stuff;
@@ -221,4 +285,17 @@ void streaming_stuff_send_text(char const *text)
         g_streaming_stuff->send_text(text);
 }
 
+void streaming_stuff_override_view(float *vieworg, float *viewangles)
+{
+    if (g_streaming_stuff)
+        g_streaming_stuff->override_view(vieworg, viewangles);
+    
+}
+
+void streaming_stuff_restore_view(float *vieworg, float *viewangles)
+{
+    if (g_streaming_stuff)
+        g_streaming_stuff->restore_view(vieworg, viewangles);
+    
+}
 

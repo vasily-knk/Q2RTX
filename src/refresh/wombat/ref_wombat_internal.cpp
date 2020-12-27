@@ -176,6 +176,12 @@ struct ref_wombat_internal_impl
     {
         iface_->get_video_streaming_server().enqueue_frame(video_frame, scene_params);
     }
+
+
+    void update_replies(vr_streaming::cmd_server_callbacks* callbacks) override
+    {
+        VerifyMsg(false, "Not implemented");
+    }
 private:
 
     // binary::output_stream begin_frame_data()
