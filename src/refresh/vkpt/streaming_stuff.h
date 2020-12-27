@@ -18,6 +18,10 @@ void streaming_stuff_send_text(char const *text);
 
 int streaming_stuff_check_fence(void *fence);
 
+void streaming_stuff_override_view(float *vieworg, float *viewangles);
+void streaming_stuff_restore_view(float *vieworg, float *viewangles);
+
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
