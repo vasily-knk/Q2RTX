@@ -560,8 +560,12 @@ qboolean GL_ShowErrors(const char *func)
     return qtrue;
 }
 
+
 void R_RenderFrame_GL(refdef_t *fd)
 {
+	streaming_stuff_override_view(fd);
+
+
     GL_Flush2D();
 
     if (!gl_static.world.cache && !(fd->rdflags & RDF_NOWORLDMODEL)) {
@@ -622,6 +626,7 @@ void R_RenderFrame_GL(refdef_t *fd)
     GL_ShowErrors(__func__);
 
     streaming_stuff_send_frame((void*)(0), r_config.width, r_config.height, r_config.width, r_config.height, NULL);
+   	streaming_stuff_restore_view(fd);
 
 }
 

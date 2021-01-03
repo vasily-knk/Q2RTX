@@ -180,7 +180,7 @@ struct ref_wombat_internal_impl
 
     void update_replies(vr_streaming::cmd_server_callbacks* callbacks) override
     {
-        VerifyMsg(false, "Not implemented");
+        assert(false && "Not implemented");
     }
 private:
 
