@@ -32,6 +32,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 cvar_t      *vid_rtx;
 cvar_t      *vid_wombat;
 cvar_t      *vid_streaming;
+cvar_t      *vid_dump_csv;
 cvar_t      *vid_geometry;
 cvar_t      *vid_modelist;
 cvar_t      *vid_fullscreen;
@@ -296,6 +297,7 @@ CL_InitRefresh
 
 void streaming_server_st(char const *args);
 void streaming_client_st(char const *args);
+void streaming_server_dump_csv(char const *csv);
 
 
 void streaming_st()
@@ -305,6 +307,8 @@ void streaming_st()
     streaming_server_st(args);
     streaming_client_st(args);
 }
+
+
 
 
 void CL_InitRefresh(void)
@@ -337,6 +341,7 @@ void CL_InitRefresh(void)
 
     vid_wombat = Cvar_Get("vid_wombat", "0", CVAR_REFRESH | CVAR_ARCHIVE);
     vid_streaming = Cvar_Get("vid_streaming", "0", CVAR_REFRESH | CVAR_ARCHIVE);
+    vid_dump_csv = Cvar_Get("vid_dump_csv", "0", CVAR_REFRESH | CVAR_ARCHIVE);
 
     vid_fullscreen = Cvar_Get("vid_fullscreen", "0", CVAR_ARCHIVE);
     _vid_fullscreen = Cvar_Get("_vid_fullscreen", "1", CVAR_ARCHIVE);
@@ -354,6 +359,7 @@ void CL_InitRefresh(void)
     Com_SetLastError(NULL);
 
     Cmd_AddCommand("st", (xcommand_t)&streaming_st);
+    Cmd_AddCommand("st_dump_csv", (xcommand_t)&streaming_server_dump_csv);
 
 
 #if REF_GL && REF_VKPT

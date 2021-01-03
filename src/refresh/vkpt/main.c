@@ -2291,7 +2291,7 @@ prepare_ubo(refdef_t *fd, mleaf_t* viewleaf, const reference_mode_t* ref_mode, c
 	inverse(V, ubo->invV);
 	inverse(P, ubo->invP);
 
-    streaming_stuff_set_matrices(fd->vieworg, fd->viewangles, fd->fov_x, fd->fov_y);
+    streaming_stuff_set_matrices(fd);
 
 	if (cvar_pt_projection->integer == 1 && render_world)
 	{
@@ -2467,7 +2467,7 @@ prepare_ubo(refdef_t *fd, mleaf_t* viewleaf, const reference_mode_t* ref_mode, c
 void
 R_RenderFrame_RTX(refdef_t *fd)
 {
-	streaming_stuff_override_view(fd->vieworg, fd->viewangles);
+	streaming_stuff_override_view(fd);
 
 	vkpt_refdef.fd = fd;
 	qboolean render_world = (fd->rdflags & RDF_NOWORLDMODEL) == 0;
@@ -2778,7 +2778,7 @@ R_RenderFrame_RTX(refdef_t *fd)
 		memcpy(vkpt_refdef.prev_lightstyles, vkpt_refdef.fd->lightstyles, sizeof(vkpt_refdef.prev_lightstyles));
 	}
 
-	streaming_stuff_restore_view(fd->vieworg, fd->viewangles);
+	streaming_stuff_restore_view(fd);
 }
 
 static void temporal_cvar_changed(cvar_t *self)
@@ -3168,6 +3168,12 @@ void
 streaming_server_st(char const *text)
 {
     streaming_stuff_send_text(text);
+}
+
+void
+streaming_server_dump_csv(char const *csv)
+{
+    streaming_stuff_dump_csv(Cmd_Argc() < 2 ? NULL : Cmd_Argv(1) );
 }
 
 

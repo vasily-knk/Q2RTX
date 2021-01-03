@@ -371,7 +371,7 @@ void GL_Setup3D(void)
 
     GLfloat projMatrix[16];
     GL_Frustum(projMatrix);
-    streaming_stuff_set_matrices(glr.fd.vieworg, glr.fd.viewangles, glr.fd.fov_x, glr.fd.fov_y);
+    streaming_stuff_set_matrices(&glr.fd);
 
     GL_RotateForViewer();
 

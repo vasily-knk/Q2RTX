@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include <iomanip>
+#include <optional>
 
 #include "streaming_stuff.h"
 
@@ -228,6 +229,8 @@ private:
 
 std::unique_ptr<streaming_stuff> g_streaming_stuff;
 
+std::unique_ptr<std::ostream> g_csv;
+
 } // namespace
 
 void streaming_stuff_dump_bsp_mesh(float const *verts, int num_verts, char const *map_name)
@@ -273,10 +276,10 @@ void streaming_stuff_shutdown()
     g_streaming_stuff.reset();
 }
 
-void streaming_stuff_set_matrices(float const *vieworg, float const *viewangles, float fovx_deg, float fovy_deg)
+void streaming_stuff_set_matrices(refdef_t const *rd)
 {
     if (g_streaming_stuff)
-        g_streaming_stuff->set_matrices(vieworg, viewangles, fovx_deg, fovy_deg);
+        g_streaming_stuff->set_matrices(rd->vieworg, rd->viewangles, rd->fov_x, rd->fov_y);
 }
 
 void streaming_stuff_send_text(char const *text)
@@ -285,17 +288,46 @@ void streaming_stuff_send_text(char const *text)
         g_streaming_stuff->send_text(text);
 }
 
-void streaming_stuff_override_view(float *vieworg, float *viewangles)
+void streaming_stuff_override_view(refdef_t *rd)
 {
+    if (g_csv)
+    {
+        vec3_t forward, right, up;
+
+        AngleVectors(rd->viewangles, forward, right, up);
+
+        auto const print_vec = [](vec3_t const vec)
+        {
+            for (int i = 0; i < 3; ++i)
+                *g_csv << vec[i] << ", ";
+        };
+
+        print_vec(rd->vieworg);
+        print_vec(rd->viewangles);
+        print_vec(forward);
+        print_vec(right);
+        print_vec(up);
+
+        *g_csv << std::endl;
+    }
+
     if (g_streaming_stuff)
-        g_streaming_stuff->override_view(vieworg, viewangles);
+        g_streaming_stuff->override_view(rd->vieworg, rd->viewangles);
     
 }
 
-void streaming_stuff_restore_view(float *vieworg, float *viewangles)
+void streaming_stuff_restore_view(refdef_t *rd)
 {
     if (g_streaming_stuff)
-        g_streaming_stuff->restore_view(vieworg, viewangles);
+        g_streaming_stuff->restore_view(rd->vieworg, rd->viewangles);
     
 }
 
+void streaming_stuff_dump_csv(char const *filename)
+{
+    g_csv.reset();
+    if (filename)
+    {
+        g_csv = std::make_unique<std::ofstream>(filename);
+    }
+}
