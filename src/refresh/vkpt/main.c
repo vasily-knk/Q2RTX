@@ -2919,7 +2919,7 @@ streaming_server_st(char const *text)
 }
 
 void
-streaming_server_dump_csv(char const *csv)
+streaming_server_dump_csv()
 {
     streaming_stuff_dump_csv(Cmd_Argc() < 2 ? NULL : Cmd_Argv(1) );
 }

@@ -294,7 +294,7 @@ CL_InitRefresh
 
 void streaming_server_st(char const *args);
 void streaming_client_st(char const *args);
-void streaming_server_dump_csv(char const *csv);
+void streaming_server_dump_csv();
 
 
 void streaming_st()

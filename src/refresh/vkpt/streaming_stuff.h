@@ -8,6 +8,7 @@ extern "C"
 
 #include "shared/shared.h"
 #include "refresh/refresh.h"
+#include "common/cmd.h"
 
 
 
