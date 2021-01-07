@@ -41,11 +41,19 @@ float convert_coord_back(float x)
 }
 
 
+void st_enable_override()
+{
+
+    streaming_stuff_dump_csv(Cmd_Argc() < 2 ? NULL : Cmd_Argv(1) );
+}
+
+
 struct streaming_stuff
 {
     explicit streaming_stuff(bool rtx)
         : rtx_(rtx)
 		, streaming_server_(vr_streaming::create_streaming_server())
+        , st_override_(Cvar_Get("st_override", "0", CVAR_ARCHIVE))
     {
 
         if (rtx)
@@ -174,6 +182,9 @@ struct streaming_stuff
         memcpy(old_vieworg_, vieworg, sizeof(old_vieworg_));
         memcpy(old_viewangles_, viewangles, sizeof(old_viewangles_));
 
+        if (!st_override_->integer)
+            return;
+
         auto const client_state = streaming_server_->get_client_state();
 
         float vieworg_temp[3], viewangles_temp[3];
@@ -225,11 +236,16 @@ private:
     float old_vieworg_[3], old_viewangles_[3];
 
     bool view_ovveriden_ = false;
+
+    cvar_t *st_override_ = nullptr;
+
 };
 
 std::unique_ptr<streaming_stuff> g_streaming_stuff;
 
 std::unique_ptr<std::ostream> g_csv;
+
+
 
 } // namespace
 
