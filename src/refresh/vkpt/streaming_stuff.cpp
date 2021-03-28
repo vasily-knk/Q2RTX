@@ -66,6 +66,8 @@ struct streaming_stuff
     
     void dump_bsp_mesh(float const *verts, int num_verts, char const * /*map_name*/)
     {
+        streaming_server_->clear_mesh();
+
         scaled_mesh_.assign(verts, verts + num_verts * 3);
 
         for (float &f : scaled_mesh_)
