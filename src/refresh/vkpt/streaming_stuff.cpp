@@ -73,7 +73,7 @@ struct streaming_stuff
         for (float &f : scaled_mesh_)
             f = convert_coord(f);
 
-        auto const mesh_id = streaming_server_->register_mesh(scaled_mesh_.data(), num_verts);
+        auto const mesh_id = streaming_server_->register_mesh(scaled_mesh_.data(), num_verts, false);
         streaming_server_->place_mesh(mesh_id, streaming_server_->convert_state_empty());
     }
 

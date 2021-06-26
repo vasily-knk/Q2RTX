@@ -48,6 +48,8 @@ namespace geom
     REFL_END()
 }
 
+#define VR_STREAMING_EXCLUDE_MESH
+
 #include "vr_streaming/user_data.h"
 #include "vr_streaming/cmds.h"
 
