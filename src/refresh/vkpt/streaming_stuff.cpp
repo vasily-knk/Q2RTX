@@ -52,7 +52,7 @@ struct streaming_stuff
 {
     explicit streaming_stuff(bool rtx)
         : rtx_(rtx)
-		, streaming_server_(vr_streaming::create_streaming_server())
+        , streaming_server_(vr_streaming::create_streaming_server({}))
         , st_override_(Cvar_Get("st_override", "0", CVAR_ARCHIVE))
     {
 
